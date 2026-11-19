@@ -1,0 +1,374 @@
+{
+  "experiment_id": "chap4-alert-to-incident-triage-matrix-v1",
+  "hypothesis": "A structured, rules-based triage and escalation workflow using an explicit AI misinformation incident taxonomy and severity thresholds will reduce alert fatigue and misrouting while increasing consistency and speed of incident handling, compared with an unstructured, analyst-discretion-only approach.",
+  "baseline": {
+    "name": "Unstructured_Analyst_Triage",
+    "description": "Alerts are handled one-by-one by analysts using personal judgment without a shared AI misinformation taxonomy, no standard severity levels, and no codified escalation thresholds. Ownership assignment is ad hoc; notes may be taken, but no consistent decision tree or scoring rubric exists.",
+    "process_summary": [
+      "Alerts arrive in a single queue (CSV or JSON list).",
+      "Each alert is reviewed manually; the analyst decides:",
+      "  - Is this relevant? (Y/N)",
+      "  - If yes, which team (if any) should know? (free text)",
+      "  - Does this feel like an incident? (Y/N, subjective).",
+      "No standardized severity scale, incident types, or business impact criteria are applied.",
+      "Escalation is driven by intuition or organizational politics rather than explicit thresholds."
+    ]
+  },
+  "treatment": {
+    "name": "Structured_Triage_Workflow",
+    "description": "Alerts are processed through a codified AI misinformation incident taxonomy, a 4-level severity model, and explicit escalation thresholds tied to business impact and role ownership. A simple rules engine (in code or spreadsheet) implements the decision tree, making the workflow \u2018playable\u2019 and repeatable.",
+    "components": {
+      "incident_taxonomy": [
+        "T1: Executive/Leadership Persona Attack (e.g., deepfake CEO audio/video, fabricated quotes).",
+        "T2: Product/Service Harm or Safety Narrative (e.g., fabricated safety incidents, manipulated product failures).",
+        "T3: Market/Financial Manipulation Narrative (e.g., fake earnings leaks, takeover rumors).",
+        "T4: Customer/Employee Sentiment Manipulation (e.g., synthetic reviews, coordinated complaints).",
+        "T5: Institutional Legitimacy Narrative (e.g., fake regulatory actions, fabricated legal filings).",
+        "T6: Other/Unknown (for edge or ambiguous cases)."
+      ],
+      "severity_levels": [
+        "S1 (Low): Limited reach, low credibility, no sensitive stakeholders directly targeted; easily containable.",
+        "S2 (Moderate): Growing reach or engagement within a defined audience; some potential for brand harm if unaddressed within agreed SLA.",
+        "S3 (High): High-credibility content or rapid spread across critical channels/stakeholders; material risk to revenue, safety, or trust if not handled quickly.",
+        "S4 (Critical): Immediate and significant threat to life/safety, market stability, regulatory exposure, or enterprise-defining reputation damage."
+      ],
+      "business_impact_criteria": {
+        "dimensions": [
+          "Reach: number of impressions/accounts or proxy indicators (e.g., followers of amplifying accounts).",
+          "Velocity: growth in mentions or shares over a defined time window.",
+          "Audience_criticality: whether priority stakeholders (regulators, investors, employees, key customers, critical communities) are clearly engaged.",
+          "Content_credibility: apparent production quality, use of real brand assets, presence on trusted channels.",
+          "Regulatory_legal_trigger: likelihood of triggering mandatory disclosure, market abuse risk, or specific legal exposure."
+        ],
+        "scoring_scale": "Each dimension scored 0\u20133, where 0 = negligible and 3 = severe/high. Severity S1\u2013S4 is derived from combined score thresholds (e.g., 0\u20133 = S1, 4\u20136 = S2, 7\u20139 = S3, 10\u201315 = S4)."
+      },
+      "escalation_thresholds": [
+        "Alert remains ALERT_ONLY (no incident) when combined impact score <= 2 AND taxonomy not in T1\u2013T3.",
+        "Create INCIDENT (S1 or S2) when combined impact score >= 3 OR the taxonomy is T1\u2013T5 regardless of current reach, to enable monitoring and light coordination.",
+        "Auto-escalate to CROSS_FUNCTIONAL_INCIDENT (S3) if combined impact score >= 7 OR high Audience_criticality (score 3) OR Regulatory_legal_trigger (score 2\u20133).",
+        "Designate CRISIS_LEVEL_INCIDENT (S4) if combined impact score >= 10 OR any hard triggers fire (e.g., direct threat to life/safety, clear market manipulation intent, direct regulator involvement)."
+      ],
+      "ownership_model": {
+        "primary_owners": [
+          "Comms/Brand: Own taxonomy T1, T2, T4, incident narrative alignment, and external messaging.",
+          "Legal: Co-own T3, T5, and any incident with regulatory/legal triggers >= 2.",
+          "Security/Risk: Co-own T2, T3, T5 where there is clear adversarial/organized behavior.",
+          "Product/Operations: Co-own T2 incidents involving product claims or safety implications."
+        ],
+        "RACI_example": "For each incident, assign Responsible, Accountable, Consulted, Informed based on taxonomy+severity (e.g., S3 T1 -> Comms Responsible, CCO Accountable, Legal & Security Consulted, Product Informed)."
+      },
+      "triage_decision_tree": "A simple, deterministic flow mapping alert attributes to (incident_type, severity_level, escalation_flag, owner_team). Implemented as code rules or decision-logic tables so that the same alert processed twice yields the same outcome."
+    }
+  },
+  "workloads": [
+    {
+      "name": "Synthetic_Alert_Stream_Low_to_Mid_Risk",
+      "description": "A time-ordered set of synthetic AI misinformation-related alerts representing low to moderate risk scenarios (e.g., small-scale synthetic reviews, minor rumor about product quality, early-stage fake executive quote).",
+      "input_format": "CSV or JSON array where each row/object is one alert.",
+      "fields": [
+        "alert_id: unique identifier.",
+        "timestamp: ISO 8601 datetime.",
+        "channel: e.g., 'twitter', 'tiktok', 'financial_forum', 'messaging_app', 'news_blog'.",
+        "suspected_content_type: 'text', 'image', 'video', 'audio', 'mixed'.",
+        "preliminary_source_risk: numeric 0\u20133 (0 = unknown/low, 3 = high) based on origin (e.g., anonymous account vs known influencer).",
+        "detected_keywords_tags: list of strings (e.g., ['fake_recall', 'ceo_quote']).",
+        "reach_proxy: integer (e.g., follower count of main account or estimated impressions).",
+        "engagement_proxy: integer (e.g., combined likes/comments/shares or platform-specific equivalent).",
+        "stakeholder_mentions: list of stakeholder groups (e.g., ['employees', 'investors', 'regulators', 'customers']).",
+        "geo_or_market: region or market label.",
+        "pre_flagged_category: optional rough initial tag from detection layer (e.g., 'possible_deepfake', 'sentiment_attack', 'market_rumor')."
+      ],
+      "baseline_processing": "Analyst (or simulation script approximating ad hoc behavior) reads each alert in sequence, assigns `is_incident` (Y/N), `free_text_owner`, and `priority` (Low/Medium/High) with no required consistency constraints.",
+      "treatment_processing": "Each alert is run through the structured triage rules to produce `incident_type`, `severity_level`, `escalation_level` (None/S1\u2013S4), `owner_team`, and `requires_cross_functional_coordination` (Boolean)."
+    },
+    {
+      "name": "Synthetic_Alert_Stream_High_Risk_And_Mixed",
+      "description": "A mixed stream combining benign noise, low-risk alerts, and several high-consequence scenarios (e.g., viral deepfake of CEO, fabricated product recall, fake regulatory probe leak). Designed to test edge cases, escalation logic, and cross-functional routing.",
+      "input_format": "Same schema as Synthetic_Alert_Stream_Low_to_Mid_Risk for comparability.",
+      "special_cases": [
+        "Multiple alerts referencing the same underlying narrative (requires deduplication/incident merging logic).",
+        "Conflicting signals about reach/velocity to test conservative vs aggressive thresholds.",
+        "Ambiguous content where taxonomy categorization is non-obvious, stressing the T6 'Other/Unknown' handling."
+      ],
+      "baseline_processing": "Analyst-discretion-only simulation, potentially leading to inconsistent classification and escalation between runs or between analysts.",
+      "treatment_processing": "Structured triage with explicit narrative grouping (same-narrative alerts mapped to the same incident_id) and strict severity/escalation thresholds applied."
+    }
+  ],
+  "controls": {
+    "data_consistency": [
+      "Use the exact same synthetic alert streams (same files, same order) for both baseline and treatment conditions.",
+      "Ensure that any randomness in baseline analyst-simulation (if used to mimic human inconsistency) is seeded and documented so that runs are repeatable."
+    ],
+    "time_window": [
+      "Define a fixed triage time window (e.g., simulate 8 hours of alerts) and do not change it between conditions.",
+      "If simulating analyst capacity, fix the hypothetical processing rate per analyst (e.g., 20 alerts/hour) for both baseline and treatment."
+    ],
+    "analyst_knowledge": [
+      "For human-in-the-loop experiments, ensure analysts receive identical background briefings and access to the same contextual information about the organization and scenarios.",
+      "Only the availability of the structured triage playbook and tooling should differ between baseline and treatment groups."
+    ],
+    "tooling_version": "Lock the rules engine and decision tree implementation for the duration of the experiment; version changes must be treated as a new experiment.",
+    "labeling_ground_truth": [
+      "Define a separate 'ground truth' label set for each alert/incident (e.g., correct taxonomy type, intended severity, correct escalation level) created by the experiment designer and not visible to analysts.",
+      "Use this ground truth consistently to compute accuracy-related metrics for both baseline and treatment."
+    ]
+  },
+  "metrics": [
+    {
+      "name": "alert_to_incident_conversion_rate",
+      "unit": "percentage_of_alerts",
+      "description": "Percentage of incoming alerts that are classified as incidents (any severity). Used to compare over- and under-escalation tendencies."
+    },
+    {
+      "name": "high_severity_incident_detection_rate",
+      "unit": "percentage_of_true_S3_S4_incidents_detected",
+      "description": "Proportion of ground-truth S3\u2013S4 incidents that are correctly identified and escalated as S3\u2013S4 (or higher) within the simulation window."
+    },
+    {
+      "name": "misrouted_incident_rate",
+      "unit": "percentage_of_incidents",
+      "description": "Percentage of incidents whose assigned owner_team does not match the predefined correct owner_team in ground truth."
+    },
+    {
+      "name": "severity_misclassification_rate",
+      "unit": "percentage_of_incidents",
+      "description": "Percentage of incidents whose assigned severity_level differs from ground truth (over- or under-estimation)."
+    },
+    {
+      "name": "median_time_to_classification",
+      "unit": "minutes",
+      "description": "Median elapsed time from alert timestamp to incident classification with assigned severity and owner (simulated via fixed processing rate or measured with real analysts)."
+    },
+    {
+      "name": "alert_fatigue_proxy_rate",
+      "unit": "percentage_of_alerts",
+      "description": "Percentage of alerts that remain unreviewed or reviewed but left as 'no action' while at least one ground-truth S3\u2013S4 incident is present in the backlog. This approximates alert fatigue risk."
+    },
+    {
+      "name": "incident_consistency_score",
+      "unit": "percentage_agreement",
+      "description": "Inter-rater or inter-run agreement on incident type and severity (e.g., percentage of alerts given same (incident_type, severity_level) labels across analysts or runs)."
+    },
+    {
+      "name": "cross_functional_escalation_accuracy",
+      "unit": "percentage_of_S3_S4_incidents",
+      "description": "Percentage of S3\u2013S4 incidents that are escalated to all required functions (e.g., Comms, Legal, Security) as defined in the RACI ground truth."
+    }
+  ],
+  "success_criteria": {
+    "quantitative_thresholds": [
+      "High severity detection: Treatment high_severity_incident_detection_rate >= 95% AND at least 10 percentage points higher than baseline.",
+      "Misrouting: Treatment misrouted_incident_rate <= 10% AND at least 30% lower relative to baseline misrouted_incident_rate.",
+      "Severity accuracy: Treatment severity_misclassification_rate <= 15% AND at least 25% lower relative to baseline.",
+      "Timeliness: Treatment median_time_to_classification <= baseline median_time_to_classification (i.e., not slower) OR increase is <= 10% while detection and routing metrics improve substantially.",
+      "Alert fatigue: Treatment alert_fatigue_proxy_rate <= baseline alert_fatigue_proxy_rate by at least 20% relative reduction.",
+      "Consistency: Treatment incident_consistency_score >= 85% AND at least 20 percentage points higher than baseline in multi-analyst tests."
+    ],
+    "qualitative_criteria": [
+      "Executives reviewing the triage logs and outputs can clearly explain why each S3\u2013S4 incident was escalated and to whom, using the taxonomy and thresholds without resorting to ad hoc justifications.",
+      "The resulting incident classification and escalation matrix is understandable in a single page for board briefing and can be walked through using 2\u20133 sample incidents from the workloads."
+    ]
+  },
+  "failure_modes": [
+    {
+      "name": "Over_escalation",
+      "description": "The rules engine escalates too many alerts to incidents or high severity levels, overwhelming cross-functional teams.",
+      "indicators": [
+        "Treatment alert_to_incident_conversion_rate >> baseline (e.g., > 2x) with no corresponding improvement in high_severity_incident_detection_rate.",
+        "Executives report that the incident queue has effectively become another noisy alert feed."
+      ]
+    },
+    {
+      "name": "Under_escalation",
+      "description": "The thresholds are too conservative, leaving genuine S3\u2013S4 incidents un-escalated.",
+      "indicators": [
+        "Treatment high_severity_incident_detection_rate < 90%.",
+        "Post-hoc comparison shows multiple ground-truth S3\u2013S4 incidents stuck at S1\u2013S2 or left as alerts-only."
+      ]
+    },
+    {
+      "name": "Routing_ambiguity",
+      "description": "Incidents are classified but ownership remains unclear, causing delays and turf disputes.",
+      "indicators": [
+        "misrouted_incident_rate remains high (> 20%) in treatment.",
+        "Triagers frequently select 'Other/Unknown' owner_team or manually override the rules."
+      ]
+    },
+    {
+      "name": "Rules_complexity_overload",
+      "description": "The decision tree becomes so complex that analysts bypass it or misapply it.",
+      "indicators": [
+        "Large gap between rules-engine output and actual analyst classifications.",
+        "Analyst feedback indicates that the workflow is too hard to remember or execute under time pressure."
+      ]
+    },
+    {
+      "name": "Taxonomy_mismatch",
+      "description": "The incident taxonomy does not map cleanly to the organization\u2019s real-world cases, creating frequent edge cases.",
+      "indicators": [
+        "High rate of T6 'Other/Unknown' assignments.",
+        "Executives cannot easily map recent real incidents onto the taxonomy categories."
+      ]
+    }
+  ],
+  "required_environment": {
+    "runtime": [
+      "Python 3.10+ (or equivalent language runtime if ported).",
+      "Jupyter Notebook or JupyterLab for interactive experimentation.",
+      "Alternatively, a spreadsheet environment (e.g., Excel, Google Sheets) for non-code users with the same logic encoded in formulas."
+    ],
+    "libraries": [
+      "pandas >= 1.5 (for data loading and manipulation).",
+      "numpy >= 1.23 (for basic numerical operations).",
+      "matplotlib or seaborn (optional, for visualizing triage outcomes)."
+    ],
+    "repository_structure": {
+      "path_examples": [
+        "experiments/04-triage-classification-escalation/",
+        "experiments/04-triage-classification-escalation/baseline_unstructured_triage.ipynb",
+        "experiments/04-triage-classification-escalation/treatment_structured_triage.ipynb",
+        "experiments/04-triage-classification-escalation/data/synthetic_alert_stream_low_mid.csv",
+        "experiments/04-triage-classification-escalation/data/synthetic_alert_stream_high_mixed.csv",
+        "experiments/04-triage-classification-escalation/config/triage_rules.yaml"
+      ]
+    },
+    "human_participants_optional": {
+      "roles": [
+        "Comms lead or senior comms practitioner.",
+        "Legal counsel or risk representative.",
+        "Security or incident response representative.",
+        "Product or operations representative."
+      ],
+      "usage": "Optional tabletop-style run where humans apply baseline vs treatment triage; not required for automated simulation but recommended for leadership workshops."
+    }
+  },
+  "run_instructions": [
+    "Clone the repository: `git clone https://github.com/bookauthority/defending-brand-trust-ai-misinformation.git` and `cd defending-brand-trust-ai-misinformation`.",
+    "Ensure the required environment is available (Python and libraries, or spreadsheet software). For Python, create and activate a virtual environment if desired.",
+    "Install dependencies (if a requirements file is provided): `pip install -r requirements.txt`.",
+    "Navigate to the experiment directory: `cd experiments/04-triage-classification-escalation`.",
+    "Review the configuration file (e.g., `config/triage_rules.yaml`) to understand the incident taxonomy, severity scoring, and escalation thresholds. Optionally, adjust thresholds to reflect your organization\u2019s risk appetite, keeping a copy of the original for comparison.",
+    "Open `baseline_unstructured_triage.ipynb` in Jupyter. Run all cells to:",
+    "  - Load `data/synthetic_alert_stream_low_mid.csv` and `data/synthetic_alert_stream_high_mixed.csv`.",
+    "  - Apply a simple baseline triage simulation that mimics unstructured analyst behavior (or, if configured, prompt for manual decisions).",
+    "  - Export baseline outputs to `outputs/baseline_results_low_mid.csv` and `outputs/baseline_results_high_mixed.csv`.",
+    "Open `treatment_structured_triage.ipynb`. Run all cells to:",
+    "  - Load the same alert streams (low_mid and high_mixed).",
+    "  - Apply the structured triage decision tree using the rules defined in `config/triage_rules.yaml`.",
+    "  - Generate incident classifications, severity levels, escalation flags, and owner assignments.",
+    "  - Save treatment outputs to `outputs/treatment_results_low_mid.csv` and `outputs/treatment_results_high_mixed.csv`.",
+    "Run the comparison section in `treatment_structured_triage.ipynb` (or a separate `compare_baseline_treatment.ipynb` if provided) to compute all defined metrics:",
+    "  - alert_to_incident_conversion_rate",
+    "  - high_severity_incident_detection_rate",
+    "  - misrouted_incident_rate",
+    "  - severity_misclassification_rate",
+    "  - median_time_to_classification (simulated or measured).",
+    "  - alert_fatigue_proxy_rate",
+    "  - incident_consistency_score (if multiple runs/analysts are used).",
+    "  - cross_functional_escalation_accuracy",
+    "Review the automatically generated summary table and visualizations (e.g., bar charts comparing baseline vs treatment for key metrics).",
+    "Compare the observed metrics with the success_criteria section to assess whether the structured workflow materially improves triage performance without causing harmful over-escalation.",
+    "Iterate on the `triage_rules.yaml` thresholds and rerun the treatment notebook if you wish to experiment with different escalation thresholds or ownership mappings. Document each variant of rules as a separate configuration version when comparing results.",
+    "As an executive exercise, export the final incident classification and escalation mapping as a matrix (e.g., `outputs/incident_classification_matrix.xlsx`) and use it as the basis for discussion with Comms, Legal, Security, and Product leaders."
+  ],
+  "evidence_schema": {
+    "type": "object",
+    "description": "Schema for saving experiment runs and comparing baseline vs treatment triage performance across alert streams and configuration versions.",
+    "required": [
+      "experiment_id",
+      "run_id",
+      "timestamp",
+      "configuration_version",
+      "workload_name",
+      "condition",
+      "metrics",
+      "notes"
+    ],
+    "properties": {
+      "experiment_id": {
+        "type": "string",
+        "description": "Identifier for this experiment, e.g., 'chap4-alert-to-incident-triage-matrix-v1'."
+      },
+      "run_id": {
+        "type": "string",
+        "description": "Unique identifier for a specific execution of baseline or treatment (e.g., UUID)."
+      },
+      "timestamp": {
+        "type": "string",
+        "format": "date-time",
+        "description": "ISO 8601 timestamp when the run was completed."
+      },
+      "configuration_version": {
+        "type": "string",
+        "description": "Version or hash of the triage rules configuration (e.g., 'v1.0', 'rules_2026-01-05')."
+      },
+      "workload_name": {
+        "type": "string",
+        "enum": [
+          "Synthetic_Alert_Stream_Low_to_Mid_Risk",
+          "Synthetic_Alert_Stream_High_Risk_And_Mixed"
+        ],
+        "description": "Name of the alert stream used in this run."
+      },
+      "condition": {
+        "type": "string",
+        "enum": [
+          "baseline",
+          "treatment"
+        ],
+        "description": "Whether this run used the unstructured baseline process or the structured treatment workflow."
+      },
+      "metrics": {
+        "type": "object",
+        "required": [
+          "alert_to_incident_conversion_rate",
+          "high_severity_incident_detection_rate",
+          "misrouted_incident_rate",
+          "severity_misclassification_rate",
+          "median_time_to_classification",
+          "alert_fatigue_proxy_rate",
+          "incident_consistency_score",
+          "cross_functional_escalation_accuracy"
+        ],
+        "properties": {
+          "alert_to_incident_conversion_rate": {
+            "type": "number",
+            "description": "Percentage of alerts classified as incidents in this run."
+          },
+          "high_severity_incident_detection_rate": {
+            "type": "number",
+            "description": "Percentage of ground-truth S3\u2013S4 incidents detected and correctly escalated."
+          },
+          "misrouted_incident_rate": {
+            "type": "number",
+            "description": "Percentage of incidents routed to an incorrect owner_team."
+          },
+          "severity_misclassification_rate": {
+            "type": "number",
+            "description": "Percentage of incidents whose severity_level differs from ground truth."
+          },
+          "median_time_to_classification": {
+            "type": "number",
+            "description": "Median time in minutes from alert to classification in this run."
+          },
+          "alert_fatigue_proxy_rate": {
+            "type": "number",
+            "description": "Percentage of alerts left unreviewed or no-action while S3\u2013S4 incidents remained unresolved."
+          },
+          "incident_consistency_score": {
+            "type": "number",
+            "description": "Agreement percentage on incident labels compared to other runs/analysts under the same condition."
+          },
+          "cross_functional_escalation_accuracy": {
+            "type": "number",
+            "description": "Percentage of S3\u2013S4 incidents correctly escalated to all required functions."
+          }
+        }
+      },
+      "notes": {
+        "type": "string",
+        "description": "Free-text notes on any deviations, analyst feedback, or contextual factors relevant for interpreting this run."
+      }
+    }
+  }
+}

@@ -1,0 +1,418 @@
+{
+  "experiment_id": "exp-13-incident-learning-postmortem-analytics-v1",
+  "hypothesis": "A structured, analytics-supported postmortem process for AI misinformation incidents (including standardized data capture, timeline reconstruction, and pattern analysis) will increase the rate and quality of concrete follow-through actions (playbook updates, governance changes, training adjustments) compared to an ad-hoc, narrative-only review approach, without imposing unsustainable overhead on executive stakeholders.",
+  "baseline": {
+    "description": "Current-state or minimal postmortem practice using unstructured narrative write-ups in documents or slides, with inconsistent data capture and no standardized quantitative analysis.",
+    "process": [
+      "An incident concludes and a responsible team drafts a narrative summary (e.g., slide deck or Word/Google doc) describing what happened, key decisions, and outcomes.",
+      "Data used in the review is ad hoc: screenshots, anecdotal timelines, and selected metrics pulled manually from tools (social listening, PR reports, ticketing systems).",
+      "No standard incident data schema; each incident report uses its own structure and terminology.",
+      "Root cause analysis is informal (e.g., discussion of \u201cwhat went wrong\u201d) and tends to emphasize external actors and platforms (e.g., \u201cbad actors on social media\u201d) rather than systemic internal factors (process, incentives, governance, tooling).",
+      "Lessons learned are captured as bullet points in the document but are not systematically mapped to specific artifacts (playbooks, policies, training) or tracked through to completion.",
+      "Incident insights are stored in file systems or slide repositories, making cross-incident comparison difficult and limiting discovery of patterns over time."
+    ],
+    "tooling": [
+      "Office productivity tools (e.g., PowerPoint, Google Slides, Word, Google Docs).",
+      "Email and chat for discussion.",
+      "Optional: manually generated charts exported from analytics platforms, but not reproducible from a shared notebook or pipeline."
+    ],
+    "workload_handling": "Each incident is treated as a unique narrative effort. Time to complete a postmortem varies widely and often depends on the diligence of the incident owner rather than a standard process or analytics pipeline."
+  },
+  "treatment": {
+    "description": "A standardized, analytics-enabled postmortem workflow supported by reproducible notebooks that ingest structured incident data, reconstruct timelines, analyze response effectiveness, and cluster incidents into patterns for organizational learning.",
+    "process": [
+      "Upon incident closure (or stabilization), a postmortem is scheduled with a defined template and roles (facilitator, scribe, functional representatives from comms, legal, security, product, operations).",
+      "Incident data is captured into a standardized schema (see evidence_schema) covering identifiers, timestamps, channels, severity, stakeholders, decisions, actions, and outcomes.",
+      "An incident analytics notebook (from the repository) is run to:",
+      "  - Reconstruct a time-sequenced incident timeline (alerts, internal decisions, external communications, observable impact metrics).",
+      "  - Compute response effectiveness indicators (e.g., time to detect, time to first executive briefing, time to first public response, approximate peak misinformation reach versus post-response reach).",
+      "  - Visualize incident phases (detection, triage, response, stabilization) and key decision points.",
+      "  - Optionally, compare these indicators to previous incidents or to target SLAs.",
+      "Using the analytics outputs, the postmortem facilitation script guides the team through a structured root cause analysis that explicitly considers:",
+      "  - Process gaps (triage, escalation, approvals).",
+      "  - Governance and decision-rights issues.",
+      "  - Tooling and data limitations.",
+      "  - Cultural and incentive misalignments.",
+      "  - External actor behavior as one factor among several.",
+      "Findings are translated into specific, trackable follow-through actions linking directly to:",
+      "  - Playbooks to be updated (with version IDs).",
+      "  - Governance artifacts (charters, RACIs, escalation matrices) to be revised.",
+      "  - Training or onboarding materials to be adjusted.",
+      "  - Monitoring/detection configurations or thresholds to be tuned.",
+      "The incident and its analytics summary are entered into an incident knowledge base and pattern library. A notebook clusters incidents on configurable dimensions (e.g., narrative type, affected stakeholders, channel mix, root causes) to surface recurring patterns.",
+      "A governance checkpoint (e.g., Trust Defense Council or similar body) periodically reviews aggregated patterns and follow-through status, using notebook outputs to prioritize structural improvements."
+    ],
+    "tooling": [
+      "Standardized incident data schema (JSON/CSV) defined in the repository.",
+      "Jupyter or similar notebooks that:",
+      "  - Ingest incident event logs and metadata.",
+      "  - Reconstruct timelines and visualize key phases and metrics.",
+      "  - Summarize response effectiveness against benchmarks or SLAs.",
+      "  - Optionally cluster historical incidents into pattern families.",
+      "Template postmortem agenda and facilitation script that references notebook outputs (e.g., \u201cReview the timeline chart on cell X\u201d or \u201cDiscuss spikes in narrative exposure on plot Y\u201d).",
+      "An incident knowledge base (could be a simple folder structure with JSON/CSV plus markdown summaries, or integrated into an internal wiki) referencing analytics artifacts.",
+      "Lightweight issue-tracking or task-management tool to track follow-through actions and their linkage to incidents and artifacts (playbooks, policies, training assets)."
+    ],
+    "workload_handling": "All incidents above a defined severity threshold are processed through the structured postmortem workflow and analytics notebooks. Lower-severity incidents may use a \u201clightweight\u201d template and subset of analytics to avoid undue burden while still feeding the knowledge base."
+  },
+  "workloads": [
+    {
+      "name": "Historical Incident Backfill",
+      "description": "Apply both baseline and treatment-style reviews to a small set of past AI misinformation incidents to compare output quality, effort, and derived actions.",
+      "inputs": {
+        "incident_cases": "3\u20136 historical AI misinformation incidents with at least minimal logs or artifacts available (e.g., social media monitoring exports, PR response timelines, internal chat transcripts).",
+        "data_format": "Raw logs or exports may require manual mapping into the incident event schema (timestamp, actor, channel, event_type, description, metadata)."
+      },
+      "baseline_execution": [
+        "Select 3\u20136 incidents representative of your threat landscape (e.g., deepfake executive video, fabricated product recall, synthetic review campaigns).",
+        "Have a senior owner (e.g., comms or risk leader) produce or locate the existing narrative postmortem (or reconstruct one) using standard document tools without using the analytics notebooks or structured schema.",
+        "Capture effort metrics: approximate hours spent, number of participants, time from initiation to completion, and subjective completeness rating by incident owner.",
+        "Identify and list all explicit follow-through items captured (e.g., \u201cupdate playbook X\u201d, \u201cadjust escalation thresholds\u201d, \u201ctrain spokespeople\u201d)."
+      ],
+      "treatment_execution": [
+        "Map each incident\u2019s available evidence into the standardized incident data schema (events, metadata, metrics).",
+        "Run the incident analytics notebook for each incident to generate:",
+        "  - Event timeline visualization.",
+        "  - Key time-based metrics (detection, escalation, response).",
+        "  - Summary tables of actions vs. phases.",
+        "  - Optional clustering or similarity analysis if enough incidents exist.",
+        "Conduct a structured postmortem session using the provided template and notebook outputs. Ensure cross-functional participation to capture tacit knowledge.",
+        "Document follow-through items using the standardized action schema (linked to specific artifacts and owners).",
+        "Capture effort metrics similar to the baseline (hours, participants, duration) and gather subjective usefulness ratings from participants (e.g., perceived clarity of causes, confidence in recommendations)."
+      ]
+    },
+    {
+      "name": "Live Incident Postmortem Comparison",
+      "description": "For a new AI misinformation incident occurring during the study period, compare outcomes between a minimally instrumented baseline review and the analytics-enabled structured treatment review.",
+      "inputs": {
+        "incident_case": "One real AI-driven misinformation incident occurring after the treatment process is designed (or a realistic end-to-end tabletop simulation that produces synthetic logs).",
+        "live_data": "Time-stamped alerts, social monitoring data, internal ticket changes, approval and escalation records, response content timestamps, and external impact metrics (reach, sentiment proxies, inquiries)."
+      },
+      "baseline_execution": [
+        "Within a few days of incident stabilization, have the incident owner draft a narrative postmortem in the traditional format without using the new analytics notebooks.",
+        "Record the same effort metrics as in the historical backfill workload (hours, participants, days to completion).",
+        "Capture initial follow-through items identified exclusively through this baseline process."
+      ],
+      "treatment_execution": [
+        "Within a similar timeframe (or immediately following the baseline review), capture incident events into the standardized schema.",
+        "Run the analytics notebook to produce the incident timeline and metrics.",
+        "Hold a structured postmortem meeting referencing the analytics outputs; invite at least the core cross-functional group (e.g., comms, legal, security, product, operations).",
+        "Record any additional or refined follow-through actions that arise due to the analytics-enabled discussion, and classify them according to type (playbook, governance, training, tooling).",
+        "Survey participants on perceived incremental value of the treatment process compared to the baseline narrative-only review."
+      ]
+    },
+    {
+      "name": "Pattern Library Build-Out",
+      "description": "After several incidents are processed via the treatment workflow, run pattern analysis notebooks to build and refine an incident pattern library.",
+      "inputs": {
+        "incident_dataset": "Structured records for at least 5\u201310 AI misinformation incidents captured in the standard schema.",
+        "pattern_dimensions": "Configurable features such as primary channel (e.g., social media, messaging, news), content type (video, audio, text), target stakeholder segment, dominant narrative type, severity, and root-cause categories."
+      },
+      "baseline_execution": [
+        "If any pattern analysis has been done historically, document how it was performed (e.g., manual review of slides, informal discussions).",
+        "Estimate the time and effort needed to generate a cross-incident summary or typology from narrative documents alone."
+      ],
+      "treatment_execution": [
+        "Run the pattern analysis notebook to cluster or group incidents based on selected dimensions (e.g., k-means on encoded categorical data or simple faceted grouping).",
+        "Generate visual summaries (e.g., counts by pattern, outcomes by pattern, time-to-respond distributions by pattern).",
+        "Use these outputs to define or refine pattern categories in the incident knowledge base and link them to specific mitigations (e.g., dedicated playbooks, training modules, governance changes)."
+      ]
+    }
+  ],
+  "controls": {
+    "time_window": "Conduct baseline and treatment reviews within comparable timeframes relative to incident stabilization (e.g., complete both within 7\u201321 days post-incident) to reduce memory decay effects.",
+    "participant_overlap": "Where feasible, involve at least one common participant (e.g., incident owner) in both baseline and treatment reviews for each incident, while adding cross-functional participants for the treatment.",
+    "incident_selection": "Include incidents of comparable severity and business impact across baseline and treatment conditions. Avoid including trivial or outlier mega-crises exclusively in one condition.",
+    "data_comparability": "Ensure that both baseline and treatment reviews have access to the same underlying incident artifacts (monitoring exports, message logs, tickets) to isolate the effect of structure and analytics rather than data availability.",
+    "process_documentation": "Use consistent templates for recording outcomes in both baseline and treatment (e.g., unified form for listing follow-through actions, even if the baseline process does not use analytics).",
+    "governance_context": "Avoid introducing unrelated process or organizational changes (e.g., major reorg) mid-experiment, or at least document them and treat them as confounding factors in interpretation."
+  },
+  "metrics": [
+    {
+      "name": "number_of_concrete_follow_through_actions",
+      "unit": "count per incident",
+      "description": "Total count of specific, trackable follow-through items identified in the postmortem (e.g., playbook updates, governance changes, training adjustments, tooling changes), excluding vague statements without owners or due dates."
+    },
+    {
+      "name": "follow_through_completion_rate_60d",
+      "unit": "percentage of actions completed within 60 days",
+      "description": "Proportion of identified follow-through actions that have been fully implemented and verified within 60 days of the postmortem date."
+    },
+    {
+      "name": "follow_through_completion_rate_120d",
+      "unit": "percentage of actions completed within 120 days",
+      "description": "Proportion of identified follow-through actions that have been fully implemented and verified within 120 days of the postmortem date."
+    },
+    {
+      "name": "average_action_specificity_score",
+      "unit": "1\u20135 Likert scale per action, averaged per incident",
+      "description": "Expert-rated specificity and implementability of follow-through actions (1 = vague, non-actionable; 5 = clearly defined, measurable, with explicit owner and due date)."
+    },
+    {
+      "name": "postmortem_effort_hours",
+      "unit": "person-hours per incident",
+      "description": "Total estimated person-hours spent preparing and conducting the postmortem, including data preparation, analysis, meeting time, and documentation."
+    },
+    {
+      "name": "postmortem_cycle_time",
+      "unit": "calendar days",
+      "description": "Number of days from incident stabilization to approved postmortem output (lessons and action list) for each incident."
+    },
+    {
+      "name": "participant_perceived_clarity_gain",
+      "unit": "1\u20135 Likert score difference (treatment vs baseline)",
+      "description": "Participant-rated increase in clarity about what actually happened and why (root causes) when using the treatment compared to baseline, from post-session surveys."
+    },
+    {
+      "name": "participant_perceived_confidence_in_actions",
+      "unit": "1\u20135 Likert score",
+      "description": "Participants\u2019 confidence that the identified actions will materially reduce risk or improve response in similar future incidents."
+    },
+    {
+      "name": "incident_pattern_coverage",
+      "unit": "percentage",
+      "description": "Share of incidents that are assigned to at least one defined pattern category in the incident knowledge base after treatment is applied."
+    },
+    {
+      "name": "analytics_notebook_run_rate",
+      "unit": "percentage of eligible incidents",
+      "description": "Proportion of incidents meeting the severity threshold for which the analytics notebook was successfully run and outputs were used in the postmortem."
+    }
+  ],
+  "success_criteria": {
+    "primary": [
+      "The treatment condition produces at least a 30% relative increase in number_of_concrete_follow_through_actions per incident compared to baseline, averaged across all studied incidents.",
+      "follow_through_completion_rate_120d is at least 15 percentage points higher in the treatment condition than in the baseline condition, controlling for incident severity.",
+      "average_action_specificity_score in the treatment condition is at least 0.5 points higher (on a 1\u20135 scale) than in the baseline condition."
+    ],
+    "secondary": [
+      "participant_perceived_clarity_gain shows an average improvement of at least +1 point (on a 1\u20135 scale) when using the analytics-enabled structured postmortem compared to baseline for the same or similar incidents.",
+      "incident_pattern_coverage reaches at least 80% of incidents processed under the treatment condition after a minimum of 5\u201310 incidents have been captured.",
+      "analytics_notebook_run_rate is at least 75% for incidents at or above the defined severity threshold, indicating operational feasibility."
+    ],
+    "operational_tolerance": [
+      "postmortem_effort_hours in the treatment condition does not exceed baseline by more than 50% on average, or any increase is judged acceptable by sponsors relative to the quality gains.",
+      "postmortem_cycle_time under the treatment condition stays within agreed organizational norms (e.g., postmortems are completed within 21 days of incident stabilization)."
+    ]
+  },
+  "failure_modes": [
+    {
+      "name": "Insufficient_incident_volume",
+      "description": "Too few relevant AI misinformation incidents occur or are available historically to draw meaningful comparisons or build a pattern library.",
+      "mitigations": [
+        "Augment with high-fidelity tabletop simulations that generate synthetic but realistic incident data compatible with the schema.",
+        "Extend the data collection period or broaden inclusion criteria to near-miss events and lower-severity incidents while clearly tagging severity."
+      ]
+    },
+    {
+      "name": "Poor_data_quality_or_incomplete_logs",
+      "description": "Key timestamps, channels, or metrics are missing or inconsistent, limiting the usefulness of analytics outputs.",
+      "mitigations": [
+        "Define a minimal viable data set (MVDS) for incidents to be included in the experiment; exclude incidents that do not meet the threshold while documenting the reason.",
+        "Add pre-processing and validation steps in the notebook to flag missing or suspicious data and prompt manual corrections or approximations.",
+        "Use sensitivity analyses to test whether conclusions hold under different assumptions about missing values."
+      ]
+    },
+    {
+      "name": "Process_adoption_resistance",
+      "description": "Executives or frontline teams perceive the structured postmortem and analytics as burdensome or threatening, leading to low adoption or superficial participation.",
+      "mitigations": [
+        "Pilot the treatment process with a small, supportive cross-functional group before scaling.",
+        "Emphasize learning and improvement rather than blame in all documentation and facilitation guides.",
+        "Keep default templates concise and provide a \u201clightweight\u201d variant for lower-severity incidents while preserving the core analytics steps."
+      ]
+    },
+    {
+      "name": "Overfitting_to_metrics",
+      "description": "Teams optimize behavior to improve measured metrics (e.g., artificially shortening detection timestamps) without genuinely enhancing response quality or learning.",
+      "mitigations": [
+        "Use mixed-method evaluation (quantitative metrics plus qualitative narrative review) to interpret results.",
+        "Include non-gamed indicators such as participant_perceived_confidence_in_actions and independent expert review of action quality.",
+        "Revisit metric definitions periodically with stakeholders to ensure alignment with genuine learning objectives."
+      ]
+    },
+    {
+      "name": "Tooling_or_environment_constraints",
+      "description": "Security policies, lack of Python/Jupyter support, or data residency issues prevent running the provided notebooks or centralizing incident data.",
+      "mitigations": [
+        "Provide a containerized or offline-friendly execution option (e.g., Docker image) that can run inside secure environments.",
+        "Offer alternative execution paths (e.g., exporting sanitized data to a segregated environment; or using cloud-hosted notebooks with strict access controls) subject to organizational policies.",
+        "If notebooks cannot be run at all, document the limitation and treat analytic steps as manual: experiment results should be interpreted accordingly as a partial treatment."
+      ]
+    },
+    {
+      "name": "Confounding_process_changes",
+      "description": "Major simultaneous changes (e.g., new detection technologies, reorganization of comms/legal) alter incident dynamics, making it hard to attribute outcomes to the postmortem treatment.",
+      "mitigations": [
+        "Record all significant concurrent changes and note them in analysis reports.",
+        "Where feasible, compare incidents before and after the structural changes within each condition, or use stratified analysis by time period.",
+        "Emphasize directional learning and qualitative insights over precise causal attribution if confounding cannot be adequately controlled."
+      ]
+    }
+  ],
+  "required_environment": {
+    "technical": [
+      "Ability to run Jupyter notebooks or an equivalent environment (e.g., VS Code with Python, Databricks, SageMaker Studio) with access to:",
+      "  - Python 3.9+ runtime.",
+      "  - Common data libraries (pandas, numpy, matplotlib/plotly/seaborn, scikit-learn or equivalent for basic clustering if desired).",
+      "  - File I/O to load CSV/JSON data representing incident events.",
+      "Secure data storage for incident logs and analytics outputs, compliant with organizational information security and privacy policies.",
+      "Version control system (e.g., Git) for managing notebook and schema revisions, ideally linked to the main repository.",
+      "Access to the book\u2019s companion repository (https://github.com/bookauthority/defending-brand-trust-ai-misinformation) or a fork thereof containing the postmortem analytics notebooks and schema definitions.",
+      "Optional: integration with existing BI tools (e.g., Tableau, Power BI, Looker) if you wish to import summarized outputs or publish visuals."
+    ],
+    "organizational": [
+      "Executive sponsorship from a senior leader responsible for brand trust, corporate communications, or enterprise risk.",
+      "Designated owner for the postmortem process (e.g., head of crisis communications, trust defense function lead, or enterprise risk manager).",
+      "Availability of cross-functional stakeholders (comms, legal, security, product, operations) for structured postmortem sessions.",
+      "Agreement on severity thresholds defining which incidents require a full structured postmortem.",
+      "A governance forum (e.g., Trust Defense Council) to review aggregated insights, patterns, and follow-through progress periodically."
+    ],
+    "data_governance": [
+      "Documented data classification of incident-related data (internal-only, confidential, etc.) and rules for exporting or pseudonymizing it where required.",
+      "If using real customer or employee data, ensure necessary approvals, access controls, and anonymization steps are in place before loading into notebooks.",
+      "Retention policies for incident records and analytics outputs clearly specified."
+    ]
+  },
+  "run_instructions": [
+    "Preparation",
+    "1. Clone or fork the companion repository (https://github.com/bookauthority/defending-brand-trust-ai-misinformation) into an approved internal environment.",
+    "2. Navigate to the chapter-13 or equivalent directory containing:",
+    "   - incident_schema.json (or similar) defining the standardized incident and event structures.",
+    "   - incident_analytics.ipynb (or similarly named notebook) for timeline reconstruction and metrics.",
+    "   - pattern_library.ipynb (or similarly named notebook) for clustering/grouping incidents into patterns.",
+    "   - postmortem_templates/ containing agenda and documentation templates.",
+    "3. Confirm your Python environment has all required dependencies installed (see repository README or requirements.txt).",
+    "4. Define your minimal viable data set (MVDS) for incident events (e.g., event_type, timestamp_utc, channel, actor_role, description, artifact_link, impact_metrics).",
+    "5. Establish your severity thresholds to determine which incidents will undergo the full structured postmortem treatment.",
+    "Historical Incident Backfill",
+    "6. Select 3\u20136 historical AI misinformation incidents that meet your MVDS and severity criteria.",
+    "7. For each selected incident:",
+    "   7.1. Retrieve all available logs and artifacts (social monitoring exports, ticket histories, email/approval timestamps, press release times, etc.).",
+    "   7.2. Create a baseline narrative postmortem (if not already existing) using your standard document format, without using the analytics notebooks. Record:",
+    "        - Total person-hours spent preparing and reviewing.",
+    "        - Number and roles of participants.",
+    "        - Calendar days from incident stabilization to postmortem completion.",
+    "        - List of identified follow-through actions (with as much detail as originally captured).",
+    "   7.3. Map the incident events into the standardized schema and save as incidents/{incident_id}.json or .csv under a dedicated data folder.",
+    "   7.4. Open incident_analytics.ipynb, configure the data path, and load the incident file.",
+    "   7.5. Execute the notebook cells to:",
+    "        - Generate a chronological event timeline with visualization.",
+    "        - Compute time-based metrics (e.g., time_to_detect, time_to_escalate, time_to_first_public_response).",
+    "        - Summarize actions by phase and channel.",
+    "   7.6. Conduct a structured postmortem session using the provided facilitation guide, referencing notebook outputs. Capture:",
+    "        - Additional or refined follow-through actions with explicit owners, due dates, and linked artifacts.",
+    "        - Participant survey responses on clarity and confidence (using a simple form or survey tool).",
+    "   7.7. Store treatment outputs (timeline image, metrics summary, structured action list) in an incident-specific folder (e.g., /knowledge_base/incidents/{incident_id}/).",
+    "Live Incident Postmortem",
+    "8. When a new qualifying AI misinformation incident occurs:",
+    "   8.1. From the outset, ensure relevant logs are captured with timestamps in formats compatible with the schema.",
+    "   8.2. Upon stabilization, perform a baseline narrative postmortem as per your existing process, recording the same effort and output metrics as in step 7.2.",
+    "   8.3. Independently (or subsequently), encode incident events into the standardized schema and run incident_analytics.ipynb as in steps 7.4\u20137.5.",
+    "   8.4. Conduct a structured treatment postmortem session referencing the analytics outputs and capture any additional or modified follow-through actions.",
+    "   8.5. Administer participant surveys comparing the usefulness of the analytics-enabled session versus the baseline narrative review.",
+    "Pattern Library Build-Out",
+    "9. After processing at least 5\u201310 incidents under the treatment condition:",
+    "   9.1. Ensure that each incident has a completed structured record in the standardized schema and is stored in a central data directory (e.g., data/incidents/).",
+    "   9.2. Open pattern_library.ipynb and configure it to load all incident files.",
+    "   9.3. Define the pattern dimensions you wish to analyze (e.g., primary narrative type, channel mix, stakeholder impact).",
+    "   9.4. Run the notebook cells to:",
+    "        - Group or cluster incidents based on the selected features.",
+    "        - Produce summary tables and visualizations (e.g., incident counts by pattern, average time_to_respond by pattern).",
+    "   9.5. Use outputs to define or refine pattern categories in your incident knowledge base, documenting for each pattern:",
+    "        - Description and representative incidents.",
+    "        - Typical root causes and contributing factors.",
+    "        - Relevant playbooks, policies, and training modules.",
+    "        - Known effective mitigations or response tactics.",
+    "Metrics Collection and Analysis",
+    "10. Maintain a separate experiment_log.csv (or equivalent) capturing for each incident-in-condition combination (baseline vs treatment):",
+    "    - incident_id",
+    "    - condition (baseline/treatment)",
+    "    - severity_level",
+    "    - number_of_concrete_follow_through_actions",
+    "    - follow_through_completion_rate_60d (updated after 60 days)",
+    "    - follow_through_completion_rate_120d (updated after 120 days)",
+    "    - average_action_specificity_score (using an internal rubric).",
+    "    - postmortem_effort_hours",
+    "    - postmortem_cycle_time",
+    "    - participant_perceived_clarity_gain (for treatment vs baseline where comparable).",
+    "    - participant_perceived_confidence_in_actions.",
+    "11. After enough data is collected, use a simple analysis notebook (e.g., chapter-13/experiment_evaluation.ipynb, if provided) to compute:",
+    "    - Averages and distributions for each metric under baseline and treatment.",
+    "    - Relative differences and, where appropriate, simple statistical tests (e.g., t-tests or non-parametric equivalents) to assess significance.",
+    "12. Summarize findings for executive stakeholders, explicitly noting any limitations (e.g., small sample size, confounders) and decisions about whether to institutionalize the treatment process.",
+    "Governance and Continuous Improvement",
+    "13. Present aggregated incident and pattern findings to your governance body (e.g., Trust Defense Council) on a regular cadence (e.g., quarterly).",
+    "14. Track which playbooks, policies, and training assets have been updated as a result of postmortem insights, and verify that subsequent incidents in similar patterns show improved metrics where possible.",
+    "15. Iterate on the incident schema, notebooks, and facilitation guides based on user feedback and observed friction, maintaining version history in your repository."
+  ],
+  "evidence_schema": {
+    "incident": {
+      "incident_id": "string; unique identifier for the incident (e.g., 'inc-2025-03-deepfake-ceo')",
+      "title": "string; short human-readable summary of the incident",
+      "description": "string; narrative description of the incident context and impact",
+      "start_timestamp_utc": "string; ISO 8601 timestamp representing when the incident began (first harmful external event detected or estimated)",
+      "end_timestamp_utc": "string; ISO 8601 timestamp representing when the incident was considered stabilized or closed",
+      "severity_level": "string; categorical severity (e.g., 'low', 'medium', 'high', 'critical') aligned with your incident taxonomy",
+      "primary_narrative_type": "string; category describing the main misinformation narrative (e.g., 'fabricated product failure', 'deepfake executive message', 'synthetic customer complaints')",
+      "primary_channels": "array of strings; main channels where the narrative spread (e.g., ['twitter', 'tiktok', 'whatsapp'])",
+      "affected_stakeholders": "array of strings; key stakeholder groups affected (e.g., ['customers', 'employees', 'investors', 'regulators'])",
+      "business_units_impacted": "array of strings; business units or regions significantly impacted",
+      "root_cause_categories": "array of strings; postmortem-determined root cause categories (e.g., ['detection_latency', 'unclear_escalation', 'tooling_gap', 'training_gap', 'governance_gap'])",
+      "peak_external_reach_estimate": "number; optional quantitative estimate of maximum external reach (impressions, views, or similar) at peak",
+      "key_outcome_indicators": "object; contains key metrics such as revenue_impact_estimate, sentiment_index_change, inbound_inquiry_volume where available"
+    },
+    "events": [
+      {
+        "event_id": "string; unique identifier for the event",
+        "incident_id": "string; foreign key linking to incident.incident_id",
+        "timestamp_utc": "string; ISO 8601 timestamp for the event",
+        "event_type": "string; normalized type (e.g., 'external_post', 'media_pickup', 'detection_alert', 'triage_meeting', 'executive_briefing', 'legal_review', 'public_statement', 'internal_announcement')",
+        "channel": "string; channel or system associated with the event (e.g., 'twitter', 'news_site', 'slack', 'email', 'ticketing_system')",
+        "actor_role": "string; role of the actor initiating the event (e.g., 'adversary', 'customer', 'employee', 'comms_team', 'legal_team', 'executive')",
+        "description": "string; concise description of what occurred",
+        "artifact_link": "string; optional URL or internal reference to supporting evidence (e.g., screenshot, log entry, ticket ID)",
+        "impact_metrics": "object; optional event-specific metrics (e.g., reach_count, engagement_count, negative_mentions, ticket_count_delta)",
+        "internal_or_external": "string; 'internal' or 'external' classification",
+        "phase": "string; incident phase at the time of the event (e.g., 'detection', 'triage', 'response', 'stabilization', 'recovery')"
+      }
+    ],
+    "actions": [
+      {
+        "action_id": "string; unique identifier for the follow-through action",
+        "incident_id": "string; foreign key linking to incident.incident_id",
+        "source_postmortem_condition": "string; 'baseline' or 'treatment' depending on which review surfaced the action",
+        "description": "string; detailed description of the action to be taken",
+        "category": "string; category such as 'playbook_update', 'governance_change', 'training_update', 'tooling_change', 'process_change', 'metrics_change'",
+        "linked_artifacts": "array of strings; IDs or paths of affected playbooks, policies, or training materials (e.g., 'playbook_deepfake_v2', 'policy_crisis_comms_2025-01')",
+        "owner_role": "string; role responsible for implementation (e.g., 'head_of_corporate_comms', 'CISO', 'GC')",
+        "owner_name_or_team": "string; specific person or team where permissible",
+        "due_date": "string; ISO 8601 date by which the action should be completed",
+        "status": "string; 'planned', 'in_progress', 'completed', 'cancelled'",
+        "completion_date": "string; ISO 8601 date when status changed to 'completed', if applicable",
+        "specificity_score": "number; 1\u20135 rating of action specificity and implementability, according to an internal rubric",
+        "expected_impact_description": "string; brief rationale for how this action will reduce risk or improve response in future incidents"
+      }
+    ],
+    "experiment_log": [
+      {
+        "experiment_id": "string; e.g., 'exp-13-incident-learning-postmortem-analytics-v1'",
+        "incident_id": "string; foreign key to incident.incident_id",
+        "condition": "string; 'baseline' or 'treatment'",
+        "severity_level": "string; duplicated for convenience from incident.severity_level",
+        "postmortem_start_date": "string; ISO 8601 date when postmortem work began",
+        "postmortem_end_date": "string; ISO 8601 date when the postmortem was approved/closed",
+        "postmortem_effort_hours": "number; total person-hours spent on the postmortem under this condition",
+        "number_of_concrete_follow_through_actions": "number; count of associated actions with status at least 'planned' and non-empty description and owner",
+        "follow_through_completion_rate_60d": "number; percentage of actions completed within 60 days of postmortem_end_date at time of measurement",
+        "follow_through_completion_rate_120d": "number; percentage of actions completed within 120 days of postmortem_end_date at time of measurement",
+        "average_action_specificity_score": "number; mean of specificity_score across associated actions at the time of initial postmortem output",
+        "participant_count": "number; number of participants in the postmortem session(s) under this condition",
+        "participant_roles": "array of strings; roles represented (e.g., ['comms', 'legal', 'security', 'product'])",
+        "participant_perceived_clarity_gain": "number; average self-reported gain (1\u20135) for treatment vs their typical baseline experience; for baseline entries this may be null or recorded separately",
+        "participant_perceived_confidence_in_actions": "number; average 1\u20135 confidence rating from participants for the effectiveness of the actions identified in this condition",
+        "notes": "string; free-text notes on any anomalies, confounding factors, or deviations from protocol"
+      }
+    ]
+  }
+}

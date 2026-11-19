@@ -1,0 +1,25 @@
+{
+  "scenario_id": "scenario-synthetic-complaints-v1",
+  "triggers": {
+    "min_events_for_investigation": 2,
+    "investigation_max_delay_minutes": 4,
+    "public_response_max_delay_minutes": 18
+  },
+  "modules": [
+    {
+      "id": "investigation",
+      "description": "Identify bot-like patterns in complaints and review sites.",
+      "roles": ["risk", "comms"]
+    },
+    {
+      "id": "public_response",
+      "description": "Reassure customers on owned channels and key review sites.",
+      "roles": ["comms"]
+    },
+    {
+      "id": "channel_coverage",
+      "description": "Align messaging across review sites, social, support, and owned web.",
+      "roles": ["comms", "support"]
+    }
+  ]
+}

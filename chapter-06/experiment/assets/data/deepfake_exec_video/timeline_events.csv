@@ -1,0 +1,7 @@
+event_id,relative_time_minutes,channel,actor_type,content_snippet
+E1,0,public_social_platforms,unknown,"Video alleging CEO makes offensive comments appears on social media."
+E2,5,encrypted_messaging_apps,employee,"Internal chat shares link to the video among employees."
+E3,10,financial_news_feeds,journalist,"Small finance blog speculates about CEO scandal."
+E4,15,internal_collaboration_tools,employee,"Employee asks in internal channel if video is real."
+E5,20,public_social_platforms,investor,"Investor account posts concern about leadership stability."
+E6,30,financial_news_feeds,journalist,"Larger outlet drafts piece on potential leadership crisis."

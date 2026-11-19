@@ -1,0 +1,7 @@
+event_id,relative_time_minutes,channel,actor_type,content_snippet
+S1,0,public_social_platforms,unknown,"Post claims product caused serious injury."
+S2,4,customer_support_tickets,customer,"Customer references social post and asks if product is safe."
+S3,8,public_social_platforms,unknown,"Local influencer amplifies safety allegation."
+S4,12,local_news_outlets,journalist,"Local blog publishes short piece on alleged safety incident."
+S5,20,internal_risk_management_system,employee,"Internal report flags potential safety rumor trending."
+S6,28,local_news_outlets,journalist,"Local TV station schedules segment on product safety concerns."

@@ -1,0 +1,2 @@
+# No external dependencies are required for this experiment.
+# The code uses only the Python 3.11+ standard library.

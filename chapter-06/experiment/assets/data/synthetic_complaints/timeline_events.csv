@@ -1,0 +1,7 @@
+event_id,relative_time_minutes,channel,actor_type,content_snippet
+C1,0,consumer_review_sites,unknown,"One-star review alleging terrible service appears."
+C2,3,public_social_platforms,unknown,"Tweet thread repeating similar language as review."
+C3,6,consumer_review_sites,unknown,"Multiple new one-star reviews appear with near-identical wording."
+C4,9,customer_support_tickets,customer,"Support ticket cites viral complaints and asks for clarification."
+C5,15,owned_web_properties,unknown,"Comment on blog post repeats unverified allegations."
+C6,25,public_social_platforms,unknown,"Coordinated hashtag campaign begins pushing complaints."

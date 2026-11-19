@@ -1,0 +1,610 @@
+{
+  "experiment_id": "exp-ch12-readiness-sim-tabletop-redteam-v1",
+  "hypothesis": "Organizations that regularly run structured AI-misinformation tabletop exercises, live simulations, and scoped red-team engagements will demonstrate measurably faster, more coordinated, and more effective responses to simulated AI-driven misinformation incidents than organizations that rely solely on static documentation and one-off briefings.",
+  "baseline": {
+    "name": "Static-Playbook Readiness Check",
+    "description": "Assess organizational readiness using existing documentation and ad hoc discussions only. No facilitated tabletop exercises, no scripted simulations, and no formal red-team challenge are conducted during the test window.",
+    "procedures": [
+      "Collect current AI-misinformation related artifacts: incident response plans, playbooks, escalation matrices, comms templates, governance charters.",
+      "Run a 60\u201390 minute briefing with the core incident response group (comms, brand, risk, legal, security, HR as applicable) to walk through a single written scenario at a high level without time-boxed decisions or injects.",
+      "Administer a standardized self-assessment survey immediately after the briefing to capture perceived readiness, clarity of roles, and confidence in decision thresholds.",
+      "Run a controlled, time-boxed **baseline simulation** using the provided repository scripts (e.g., `simulations/baseline_run.py`) that simulates an AI-misinformation incident with minimal facilitation and without prior structured practice. Capture response timing, decision quality, and coordination metrics as defined under `metrics`.",
+      "Record all metrics via the `evidence_schema` and store raw logs, timestamps, and decisions for later comparison with the treatment condition."
+    ]
+  },
+  "treatment": {
+    "name": "Structured Exercise & Red-Team Program",
+    "description": "Introduce a structured, repeatable program comprising executive tabletop exercises, live simulations with scripted injects, and a bounded red-team adversarial exercise, then re-run the same standardized simulation used in the baseline to measure improvement.",
+    "procedures": [
+      "Design 2\u20133 tabletop exercise scenarios using the scenario templates in the repository (e.g., `scenarios/deepfake_exec_call.yaml`, `scenarios/review_bombing.yaml`), tailored to the organization\u2019s crown-jewel trust assets and channels.",
+      "Conduct at least one 2\u20133 hour executive tabletop exercise and one cross-functional tabletop exercise within a 4\u20136 week window. Use facilitation guides and inject timelines from `exercises/tabletop_guides/`.",
+      "Run at least one live simulation using the repository\u2019s simulation engine (e.g., `simulations/live_timeline_sim.py`) in which synthetic social posts, media inquiries, and internal alerts are released over a compressed timeline. Require participants to interact via their usual collaboration tools (chat, ticketing, email) where feasible.",
+      "Conduct a bounded red-team exercise (e.g., 1\u20132 days) where an internal or external red team uses the scenario generators (e.g., `redteam/generator.ipynb`) to craft adversarial AI-misinformation narratives under pre-agreed rules of engagement (no real-world posting, sandbox-only assets). The blue team responds according to current playbooks.",
+      "After each exercise, run a structured debrief and After-Action Review (AAR) using templates from `exercises/debrief_templates/`. Update playbooks, escalation matrices, and comms drafts as remediation actions.",
+      "Within 2 weeks after the last exercise, re-run the same standardized simulation used in the baseline (same scenario configuration and initial conditions) and capture the same metrics: time-to-detect, time-to-first-executive-brief, decision clarity, coordination quality, and outcome alignment with policy.",
+      "Collect follow-up self-assessment survey responses to measure changes in perceived readiness and clarity, using identical questions as in the baseline."
+    ]
+  },
+  "workloads": [
+    {
+      "name": "Workload A: Executive Tabletop Exercise",
+      "description": "A facilitated, discussion-based tabletop exercise for senior leaders focused on strategic decisions, escalation thresholds, and external messaging in response to a high-impact AI-misinformation incident.",
+      "participants": [
+        "CMO or Head of Communications",
+        "CRO/Head of Risk or equivalent",
+        "CISO or Head of Security",
+        "General Counsel or senior legal representative",
+        "Head of HR (if employee-facing scenario)",
+        "Business unit leader(s) relevant to the scenario",
+        "Designated incident manager/facilitator"
+      ],
+      "scenario_input": "Select one high-impact scenario YAML/JSON configuration from `scenarios/` (e.g., synthetic deepfake of CEO making false market-moving comments) and parameterize for your industry and geography.",
+      "timeline": {
+        "prep": "2\u20133 hours facilitator preparation using `exercises/tabletop_guides/executive_tabletop_checklist.md`.",
+        "execution": "120\u2013180 minutes session with scripted injects every 10\u201320 minutes.",
+        "debrief": "30\u201345 minutes immediate hot-wash plus additional 60 minutes AAR within 5 business days."
+      },
+      "procedure": [
+        "Load the chosen scenario config file (e.g., `scenarios/deepfake_exec_call.yaml`) into the facilitator notebook (`exercises/facilitator_console.ipynb`).",
+        "Brief participants on ground rules (no blame, focus on decisions, time-boxed responses).",
+        "Execute the tabletop according to the timeline, introducing injects (media queries, social amplification, regulator interest, employee questions) via slides or printed cards.",
+        "Time-box key decisions (e.g., 5\u201310 minutes) and record who decides, what is decided, and rationales.",
+        "Capture timestamps of simulated detection, first executive briefing, public response decision, and coordination actions.",
+        "Run a structured hot-wash using the AAR template; collect qualitative notes on confusion points, gaps in playbooks, and disagreements."
+      ]
+    },
+    {
+      "name": "Workload B: Live Simulation with Synthetic Information Flow",
+      "description": "A more operational simulation where cross-functional responders interact with a scripted but dynamic stream of synthetic social media content, press queries, and internal alerts over a compressed timeline using a simulation engine.",
+      "participants": [
+        "Operational comms and social media team members",
+        "Brand management and customer support representatives",
+        "Security/Threat intelligence analyst",
+        "Legal/compliance liaison",
+        "Incident manager / response coordinator",
+        "Optional: IT/Platform operations representative"
+      ],
+      "scenario_input": "Select one scenario config designed for live simulation (e.g., `scenarios/review_bombing_campaign.yaml` or `scenarios/fake_safety_incident.yaml`) and configure intensity and duration parameters.",
+      "timeline": {
+        "prep": "3\u20134 hours to configure simulation parameters in `simulations/live_timeline_sim.py` or `simulations/live_timeline_sim.ipynb` and test delivery channels.",
+        "execution": "90\u2013150 minutes live run with injects scheduled every 2\u20135 minutes of real time.",
+        "debrief": "60\u201390 minutes AAR within 48 hours of simulation end."
+      },
+      "procedure": [
+        "Configure the simulation file with chosen parameters: attack start time, channels (e.g., Twitter-like, messaging app, news site), adversary behavior (escalation rate), and noise level.",
+        "Map simulated channels to real collaboration tools (e.g., send simulated social posts to a dedicated Slack channel, press inquiries via email, internal rumors via chat).",
+        "Start the simulation and log all generated events and timestamps to `data/logs/<org>_sim_run_{timestamp}.jsonl`.",
+        "Require participants to use their standard operating procedures: create tickets, draft responses, escalate incidents, and document decisions in their usual tools.",
+        "Use the facilitator console to pause or accelerate the simulation if needed while keeping a record of any timeline modifications.",
+        "At the end of the run, export all logs and decisions; generate an automatic timeline reconstruction using `analytics/build_timeline.ipynb` as input to the AAR."
+      ]
+    },
+    {
+      "name": "Workload C: Scoped Red-Team Exercise",
+      "description": "A controlled adversarial exercise where a designated red team designs and launches synthetic AI-misinformation campaigns inside a sandbox environment to probe weaknesses in monitoring, governance, and response playbooks.",
+      "participants": [
+        "Red team: 2\u20134 individuals (internal security, external consultants, or cross-functional staff) briefed on AI-misinformation tactics and the scenario generator.",
+        "Blue team: Existing misinformation incident responders (comms, security, legal, risk, product, customer support).",
+        "White cell / control: 1\u20132 facilitators responsible for safety, logging, and adherence to rules of engagement."
+      ],
+      "scenario_input": "Use the red-team scenario generator notebook (e.g., `redteam/generator.ipynb`) with organization-specific parameters (brands, key execs, product names, channels) but restricted to sandboxed assets and non-public channels.",
+      "timeline": {
+        "prep": "1\u20132 days to define scope, rules of engagement, success conditions, and to generate/red-team assets.",
+        "execution": "1\u20132 days for multi-phase adversarial exercise (multiple campaigns or escalations).",
+        "debrief": "Half-day (3\u20134 hours) AAR with both red and blue teams."
+      },
+      "procedure": [
+        "Define and document rules of engagement in `redteam/roe_template.md` including forbidden tactics (e.g., no real-world posting, no targeting actual customers), allowed vectors (internal test channels, synthetic datasets), and safety checks.",
+        "Use the generator notebook to produce synthetic artifacts: fake but realistic social posts, deepfake thumbnails, fabricated news headlines, and email inquiries. Store them in a clearly-labeled sandbox directory.",
+        "Schedule and coordinate the attack phases with the white cell; configure monitoring tools (if any) to ingest sandboxed events as if they were real.",
+        "Allow the red team to launch campaigns at pre-agreed windows while white cell logs all injects, detection points, and responses.",
+        "Require blue team to respond using normal workflows without prior detailed knowledge of attack specifics, but with awareness of the exercise scope.",
+        "Post-exercise, merge red-team logs, blue-team decisions, and system logs into a single event timeline using `analytics/merge_red_blue_timelines.ipynb`."
+      ]
+    }
+  ],
+  "controls": {
+    "independent_variables": [
+      "Presence vs. absence of structured exercises (tabletops, simulations, red-team engagements).",
+      "Intensity of exercises (number of scenarios, duration of simulations, complexity of red-team campaigns)."
+    ],
+    "controlled_variables": [
+      "Incident scenario used for baseline and post-treatment standardized simulations (same scenario config, same simulated channels, same initial conditions).",
+      "Core participant roles involved in both baseline and treatment measurements (e.g., same or equivalent job functions even if personnel change).",
+      "Measurement instruments (same surveys, same metric definitions, same analytics notebooks).",
+      "Simulation engine configuration (time compression factor, event generation logic, noise level) for baseline vs. post-treatment measurement runs.",
+      "Policies and formal playbooks in place at the start of the experiment window (changes are treated as outcomes/remediations, not preconditions)."
+    ],
+    "randomization": {
+      "description": "If multiple teams or business units participate, randomly assign some units to run the treatment program first while others remain in baseline for a defined period, then cross over, to reduce bias due to varying maturity levels.",
+      "method": "Use simple random assignment (e.g., Python\u2019s `random.shuffle`) over the list of eligible teams, ensuring similar size and function across baseline-first and treatment-first groups."
+    },
+    "blinding": {
+      "description": "Full blinding is not feasible because participants know whether they are engaging in exercises. However, metric calculation can be blinded by having an analyst who was not a participant compute and review metrics using de-identified event logs (e.g., roles instead of names)."
+    }
+  },
+  "metrics": [
+    {
+      "name": "time_to_detect",
+      "description": "Elapsed time from first simulated adversarial event (e.g., hostile post, fake article) to the moment the organization\u2019s monitoring or participant first flags it as a potential misinformation incident.",
+      "unit": "minutes"
+    },
+    {
+      "name": "time_to_first_executive_brief",
+      "description": "Elapsed time from first simulated adversarial event to the moment an executive (VP-level or above) receives a structured briefing or formal notification of the incident.",
+      "unit": "minutes"
+    },
+    {
+      "name": "time_to_initial_public_response",
+      "description": "Elapsed time from first simulated adversarial event to the issuance of the first official external communication (statement, post, press reply) addressing the misinformation.",
+      "unit": "minutes"
+    },
+    {
+      "name": "decision_clarity_score",
+      "description": "Assessment of how clearly key decisions (e.g., whether to respond publicly, what channels to use, whether to involve legal/regulators) were made and attributed during the exercise, rated via standardized rubric.",
+      "unit": "score_1_to_5"
+    },
+    {
+      "name": "role_clarity_score",
+      "description": "Extent to which participants understood their responsibilities, decision rights, and escalation paths, rated via immediate post-exercise survey.",
+      "unit": "score_1_to_5"
+    },
+    {
+      "name": "coordination_effectiveness_score",
+      "description": "Expert/facilitator rating of cross-functional coordination (handoffs, information sharing, conflict resolution) using a standardized rubric.",
+      "unit": "score_1_to_5"
+    },
+    {
+      "name": "policy_alignment_rate",
+      "description": "Proportion of major decisions taken during the exercise that are consistent with documented policies and playbooks (e.g., escalation matrices, comms guidelines).",
+      "unit": "percentage"
+    },
+    {
+      "name": "incident_resolution_quality_score",
+      "description": "Composite expert rating of the final state of the simulated incident relative to plausible best case, considering containment, stakeholder communications, and residual risk.",
+      "unit": "score_1_to_5"
+    },
+    {
+      "name": "exercise_insight_density",
+      "description": "Number of concrete, actionable improvement items (e.g., playbook changes, tooling gaps, training needs) identified per hour of exercise time, as recorded in AAR documents.",
+      "unit": "actions_per_hour"
+    },
+    {
+      "name": "perceived_readiness_delta",
+      "description": "Change in self-reported readiness between baseline and post-treatment standardized simulation, using identical survey questions (e.g., mean score difference).",
+      "unit": "score_delta_1_to_5"
+    }
+  ],
+  "success_criteria": {
+    "primary": [
+      {
+        "description": "Median time_to_detect and time_to_first_executive_brief improve by at least 25% from baseline to post-treatment standardized simulation for the same scenario configuration.",
+        "measurement_window": "Compare baseline standardized simulation run to post-treatment standardized simulation run within 2\u20136 weeks after exercise program completion."
+      },
+      {
+        "description": "Decision_clarity_score and coordination_effectiveness_score increase by at least 1 point on the 1\u20135 scale between baseline and post-treatment runs.",
+        "measurement_window": "Immediate debrief ratings after baseline and post-treatment standardized simulations."
+      }
+    ],
+    "secondary": [
+      {
+        "description": "Policy_alignment_rate improves by at least 20 percentage points between baseline and post-treatment standardized simulations.",
+        "measurement_window": "Same scenario, same metrics across baseline and post-treatment runs."
+      },
+      {
+        "description": "Exercise_insight_density averages at least 2 actionable improvements per exercise hour across all tabletop, simulation, and red-team events.",
+        "measurement_window": "Aggregate across all exercises conducted in the treatment program."
+      },
+      {
+        "description": "Perceived_readiness_delta is positive, with an average increase of at least 0.5 on the 1\u20135 scale across participants.",
+        "measurement_window": "Compare post-briefing survey after baseline with post-survey after final standardized simulation."
+      }
+    ],
+    "statistical_considerations": {
+      "description": "Where sample sizes allow (e.g., multiple teams or repeated runs), compute simple pre/post effect sizes and non-parametric tests (e.g., Wilcoxon signed-rank) on key metrics, noting p-values with appropriate caveats. The primary goal is operationally meaningful deltas, not formal hypothesis testing.",
+      "minimum_sample_recommendation": "At least one baseline and one post-treatment standardized simulation per participating team; ideally 3+ teams for cross-team comparison."
+    }
+  },
+  "failure_modes": [
+    {
+      "name": "Simulation Not Representative",
+      "description": "The chosen scenarios and simulation parameters do not reflect the organization\u2019s true risk profile or channels, leading to misleading conclusions about readiness.",
+      "mitigations": [
+        "Use the chapter\u2019s scenario-design guidance to align scenarios with identified crown-jewel trust assets and actual channel mix.",
+        "Pilot scenarios with a small group and refine before full-scale exercises."
+      ]
+    },
+    {
+      "name": "Overfitting to Specific Scenarios",
+      "description": "Teams learn to handle only the exact simulated scenarios rather than underlying patterns, causing an illusion of readiness.",
+      "mitigations": [
+        "Rotate scenario types (e.g., deepfake executive video, synthetic reviews, fabricated safety incident).",
+        "During debriefs, emphasize transferable principles and decision frameworks over scenario-specific facts."
+      ]
+    },
+    {
+      "name": "Measurement Bias and Hawthorne Effects",
+      "description": "Participants behave differently because they know they are being observed or because the exercise is labeled as an evaluation.",
+      "mitigations": [
+        "Frame exercises as learning opportunities rather than performance tests.",
+        "Use consistent measurement instruments and, where possible, anonymize response and survey data in analysis."
+      ]
+    },
+    {
+      "name": "Tooling and Technical Issues",
+      "description": "Simulation scripts or data pipelines fail, causing delays, incomplete logs, or inconsistent event timing.",
+      "mitigations": [
+        "Dry-run all scripts in a test environment before official exercises.",
+        "Maintain simple, manual fallbacks (e.g., slide decks or printed inject cards) for tabletop if automation fails.",
+        "Version-control all scenario configs and keep a log of any manual adjustments during the exercise."
+      ]
+    },
+    {
+      "name": "Scope Creep and Participant Fatigue",
+      "description": "Exercises try to cover too many objectives or last too long, causing rushed decisions and disengagement.",
+      "mitigations": [
+        "Limit each exercise to 2\u20133 clearly defined objectives (e.g., test escalation, test comms alignment).",
+        "Time-box sessions and build in scheduled breaks.",
+        "Distribute exercises over several weeks rather than compressing all into a single multi-day event where possible."
+      ]
+    },
+    {
+      "name": "Psychological Safety and Blame",
+      "description": "Participants feel judged or blamed for decisions made under simulated pressure, reducing candor and learning.",
+      "mitigations": [
+        "Establish and repeat ground rules emphasizing learning and system improvement, not individual evaluation.",
+        "Separate performance reviews from exercise participation.",
+        "Use the AAR format to focus on \u2018what\u2019 and \u2018why\u2019 rather than \u2018who\u2019."
+      ]
+    }
+  ],
+  "required_environment": {
+    "technical": [
+      "Python 3.10+ environment with standard data libraries (e.g., pandas, numpy, matplotlib) and Jupyter Notebook or JupyterLab.",
+      "Access to the repository `https://github.com/bookauthority/defending-brand-trust-ai-misinformation` cloned locally or accessible in a secure environment.",
+      "Ability to execute provided scripts/notebooks under `simulations/`, `scenarios/`, `redteam/`, and `analytics/` directories.",
+      "Internal collaboration tools for live simulations (e.g., Slack, Microsoft Teams, email, ticketing/incident system).",
+      "Secure storage for exercise logs, AAR documents, and metrics outputs (e.g., a restricted SharePoint, Git repo, or internal wiki)."
+    ],
+    "organizational": [
+      "Executive sponsorship and explicit approval for running simulated incidents and red-team activities, with clear scope and rules of engagement.",
+      "Agreed participation from core functions: communications/brand, risk, security, legal, and relevant business units.",
+      "Documented baseline policies and playbooks for incident response, even if incomplete, to compare against practice.",
+      "Time allocation for preparation, exercises, and debriefs, ideally over a 4\u20138 week window."
+    ],
+    "constraints_and_safety": [
+      "All simulated content must be clearly labeled as synthetic and must not be posted to public channels without explicit legal and executive approval.",
+      "Red-team activities must operate only in sandbox environments or with synthetic data; no targeting of real customers, investors, or regulators.",
+      "Data privacy and confidentiality policies must be observed; logs and AARs may contain sensitive information and should be appropriately access-controlled."
+    ]
+  },
+  "run_instructions": [
+    "Set Up Environment",
+    [
+      "Clone the repository: `git clone https://github.com/bookauthority/defending-brand-trust-ai-misinformation.git`.",
+      "Create and activate a virtual environment (e.g., `python -m venv venv && source venv/bin/activate` or equivalent on Windows).",
+      "Install required Python dependencies from the repo\u2019s `requirements.txt` or `pyproject.toml`: `pip install -r requirements.txt`.",
+      "Launch JupyterLab or Jupyter Notebook in the repo root: `jupyter lab` or `jupyter notebook`."
+    ],
+    "Configure Baseline Scenario",
+    [
+      "Navigate to the `scenarios/` directory and select one standardized scenario file to serve as the baseline/post-treatment common test (e.g., `scenarios/deepfake_exec_call.yaml`).",
+      "Open `simulations/baseline_run.ipynb` (or equivalent) and set the `SCENARIO_FILE` variable to the chosen scenario.",
+      "Configure time compression factor (e.g., 1 simulated hour = 5 real minutes) and output log path (e.g., `data/logs/baseline/`)."
+    ],
+    "Run Baseline Simulation and Collect Metrics",
+    [
+      "Brief participants on the purpose of the baseline run and ground rules, but do not provide detailed scenario specifics.",
+      "Start the simulation from within the notebook or via CLI (`python simulations/baseline_run.py --scenario scenarios/deepfake_exec_call.yaml`).",
+      "Have participants respond using their standard tools and workflows; facilitators record key decisions and timestamps in the provided logging template (`exercises/logging_templates/decision_log.csv`).",
+      "At simulation end, run `analytics/compute_metrics.ipynb` with input paths pointing to the generated logs and decision records to calculate baseline metrics (e.g., `time_to_detect`, `decision_clarity_score`).",
+      "Administer the baseline readiness survey using `exercises/surveys/readiness_survey_template.md` or an equivalent form tool, and store responses in `data/surveys/baseline/`."
+    ],
+    "Execute Treatment Program: Tabletop Exercises, Live Simulation, Red Team",
+    [
+      "TABLETOP: Use `exercises/tabletop_guides/executive_tabletop_checklist.md` to plan an executive tabletop based on a different but related scenario (e.g., `scenarios/fake_safety_incident.yaml`).",
+      "Run the tabletop exercise, introducing injects manually or via the facilitator notebook (`exercises/facilitator_console.ipynb`). Record events and decisions using the logging template.",
+      "LIVE SIMULATION: Configure and run `simulations/live_timeline_sim.ipynb` with a scenario like `scenarios/review_bombing_campaign.yaml`, mapping injects to internal channels. Capture full logs and generate a reconstructed timeline via `analytics/build_timeline.ipynb`.",
+      "RED TEAM: Agree rules of engagement using `redteam/roe_template.md`. Generate synthetic adversarial content via `redteam/generator.ipynb` and conduct the scoped red-team exercise in sandboxed environments. Merge red and blue logs using `analytics/merge_red_blue_timelines.ipynb`.",
+      "After each exercise, complete an AAR using `exercises/debrief_templates/aar_template.md`, capturing improvement actions and updating any relevant playbooks or escalation matrices."
+    ],
+    "Re-Run Standardized Simulation for Post-Treatment Measurement",
+    [
+      "After completing the treatment program (ideally within 4\u20136 weeks), re-run the same standardized scenario used in the baseline, with identical configuration (same `SCENARIO_FILE`, same time compression, same logging format).",
+      "Use the same or equivalent roles for participation; brief them as before without detailed scenario walkthrough.",
+      "Execute the simulation and record decisions and timestamps using the same logging templates.",
+      "Run `analytics/compute_metrics.ipynb` again, tagging outputs as post-treatment (e.g., `data/metrics/post_treatment/`).",
+      "Administer the same readiness survey and store results in `data/surveys/post_treatment/`."
+    ],
+    "Analyze and Compare Results",
+    [
+      "Open `analytics/compare_pre_post.ipynb` and configure paths to baseline and post-treatment metrics and survey outputs.",
+      "Generate comparative plots and tables for key metrics: `time_to_detect`, `time_to_first_executive_brief`, `decision_clarity_score`, `coordination_effectiveness_score`, `policy_alignment_rate`, and `perceived_readiness_delta`.",
+      "Interpret results against the `success_criteria`; highlight areas of significant improvement and areas where metrics did not change or worsened.",
+      "Summarize findings and recommended remediation actions in an executive-ready report using the template at `exercises/reporting/executive_summary_template.md`."
+    ]
+  ],
+  "evidence_schema": {
+    "simulation_run": {
+      "type": "object",
+      "required": [
+        "run_id",
+        "scenario_id",
+        "run_type",
+        "start_time_utc",
+        "end_time_utc",
+        "participants",
+        "events",
+        "decisions",
+        "metrics"
+      ],
+      "properties": {
+        "run_id": {
+          "type": "string",
+          "description": "Unique identifier for the simulation run (e.g., UUID)."
+        },
+        "scenario_id": {
+          "type": "string",
+          "description": "Identifier of the scenario configuration used (e.g., filename or slug)."
+        },
+        "run_type": {
+          "type": "string",
+          "enum": [
+            "baseline_standardized",
+            "post_treatment_standardized",
+            "tabletop",
+            "live_simulation",
+            "red_team"
+          ]
+        },
+        "start_time_utc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "end_time_utc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "participants": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "participant_id",
+              "role",
+              "function"
+            ],
+            "properties": {
+              "participant_id": {
+                "type": "string",
+                "description": "Pseudonymous identifier to allow analysis without exposing names."
+              },
+              "role": {
+                "type": "string",
+                "description": "Exercise role (e.g., incident_manager, comms_lead, legal_counsel)."
+              },
+              "function": {
+                "type": "string",
+                "description": "Organizational function or department (e.g., Communications, Legal, Security, Risk)."
+              }
+            }
+          }
+        },
+        "events": {
+          "type": "array",
+          "description": "Chronological log of simulated adversarial events and injects.",
+          "items": {
+            "type": "object",
+            "required": [
+              "event_id",
+              "timestamp_utc",
+              "channel",
+              "event_type",
+              "payload_ref"
+            ],
+            "properties": {
+              "event_id": {
+                "type": "string"
+              },
+              "timestamp_utc": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "channel": {
+                "type": "string",
+                "description": "Simulated channel (e.g., social_twitter_like, messaging_app, news_site, internal_chat)."
+              },
+              "event_type": {
+                "type": "string",
+                "description": "Type of inject (e.g., initial_attack_post, amplification, regulator_inquiry, employee_question)."
+              },
+              "payload_ref": {
+                "type": "string",
+                "description": "Reference to payload content (e.g., file path or object key); content itself may be stored separately."
+              }
+            }
+          }
+        },
+        "decisions": {
+          "type": "array",
+          "description": "Chronological log of key decisions taken by participants during the run.",
+          "items": {
+            "type": "object",
+            "required": [
+              "decision_id",
+              "timestamp_utc",
+              "participant_id",
+              "decision_type",
+              "description",
+              "policy_reference"
+            ],
+            "properties": {
+              "decision_id": {
+                "type": "string"
+              },
+              "timestamp_utc": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "participant_id": {
+                "type": "string"
+              },
+              "decision_type": {
+                "type": "string",
+                "description": "Category (e.g., escalate_to_executives, issue_public_statement, engage_legal, ignore_monitor)."
+              },
+              "description": {
+                "type": "string",
+                "description": "Brief natural-language summary of the decision."
+              },
+              "policy_reference": {
+                "type": "string",
+                "description": "Identifier of policy or playbook section referenced (if any), or 'none'."
+              }
+            }
+          }
+        },
+        "metrics": {
+          "type": "object",
+          "description": "Computed metrics for this run.",
+          "properties": {
+            "time_to_detect": {
+              "type": "number"
+            },
+            "time_to_first_executive_brief": {
+              "type": "number"
+            },
+            "time_to_initial_public_response": {
+              "type": "number"
+            },
+            "decision_clarity_score": {
+              "type": "number"
+            },
+            "role_clarity_score": {
+              "type": "number"
+            },
+            "coordination_effectiveness_score": {
+              "type": "number"
+            },
+            "policy_alignment_rate": {
+              "type": "number"
+            },
+            "incident_resolution_quality_score": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "survey_response": {
+      "type": "object",
+      "required": [
+        "survey_id",
+        "run_id",
+        "participant_id",
+        "timestamp_utc",
+        "responses"
+      ],
+      "properties": {
+        "survey_id": {
+          "type": "string",
+          "description": "Identifier for the survey instrument (e.g., readiness_v1)."
+        },
+        "run_id": {
+          "type": "string",
+          "description": "Identifier of the associated exercise or simulation run."
+        },
+        "participant_id": {
+          "type": "string",
+          "description": "Pseudonymous participant identifier matching the simulation_run record."
+        },
+        "timestamp_utc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "responses": {
+          "type": "object",
+          "description": "Key-value pairs of question IDs to numeric or categorical responses.",
+          "additionalProperties": {
+            "type": [
+              "number",
+              "string",
+              "boolean"
+            ]
+          }
+        }
+      }
+    },
+    "aar_record": {
+      "type": "object",
+      "required": [
+        "aar_id",
+        "run_id",
+        "timestamp_utc",
+        "facilitator_id",
+        "strengths",
+        "improvement_items"
+      ],
+      "properties": {
+        "aar_id": {
+          "type": "string"
+        },
+        "run_id": {
+          "type": "string"
+        },
+        "timestamp_utc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "facilitator_id": {
+          "type": "string"
+        },
+        "strengths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "improvement_items": {
+          "type": "array",
+          "description": "Concrete, actionable follow-ups derived from the exercise.",
+          "items": {
+            "type": "object",
+            "required": [
+              "item_id",
+              "description",
+              "owner_function",
+              "due_date",
+              "status"
+            ],
+            "properties": {
+              "item_id": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "owner_function": {
+                "type": "string",
+                "description": "Function accountable for remediation (e.g., Communications, Security, Legal)."
+              },
+              "due_date": {
+                "type": "string",
+                "format": "date"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "open",
+                  "in_progress",
+                  "completed",
+                  "deferred"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

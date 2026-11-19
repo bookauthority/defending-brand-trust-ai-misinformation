@@ -1,0 +1,27 @@
+# Simple YAML-style config for Chapter 3 detection experiments
+
+# Keywords used for both baseline and integrated heuristics
+keyword_list:
+  - BrandX
+  - fake
+  - leak
+  - scandal
+  - boycott
+  - safety
+  - deepfake
+
+# Baseline: channel-agnostic volume threshold per 15-minute window
+baseline_volume_threshold: 10
+
+# Integrated variant: per-channel volume thresholds per 15-minute window
+volume_social: 15
+volume_search: 10
+volume_dark_web: 5
+volume_owned: 3
+
+# ML-like scoring thresholds for integrated variant
+ml_review_threshold: 0.4
+ml_auto_alert_threshold: 0.75
+
+# Simulated human review delay in minutes for integrated variant
+human_review_delay_minutes: 15.0

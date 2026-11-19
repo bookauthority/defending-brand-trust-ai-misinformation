@@ -1,0 +1,25 @@
+{
+  "scenario_id": "scenario-fabricated-safety-v1",
+  "triggers": {
+    "min_events_for_investigation": 1,
+    "investigation_max_delay_minutes": 3,
+    "public_response_max_delay_minutes": 15
+  },
+  "modules": [
+    {
+      "id": "investigation",
+      "description": "Pull product telemetry and incident logs to verify claims.",
+      "roles": ["safety", "product"]
+    },
+    {
+      "id": "public_response",
+      "description": "Issue safety-focused holding statement and FAQ.",
+      "roles": ["comms", "legal", "safety"]
+    },
+    {
+      "id": "channel_coverage",
+      "description": "Coordinate with social, local news, support, and risk management.",
+      "roles": ["comms", "risk"]
+    }
+  ]
+}

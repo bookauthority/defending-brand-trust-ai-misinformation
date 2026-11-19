@@ -1,0 +1,524 @@
+{
+  "experiment_id": "exp-ch06-playbooks-misinformation-sim-0001",
+  "hypothesis": "Modular, trigger-based playbooks for common AI-driven misinformation scenarios will reduce response delay and improve decision consistency versus an ad-hoc, narrative-only guidance approach when teams handle scripted misinformation incidents.",
+  "baseline": {
+    "description": "Ad-hoc, narrative-only guidance without explicit modular playbooks.",
+    "conditions": [
+      "Participants receive a short, prose-style incident response guideline (2\u20133 pages) that describes general principles for handling misinformation but does not include: (a) explicit triggers, (b) decision gates, (c) time-based actions, or (d) channel-specific branches.",
+      "No pre-defined scenario-specific playbooks (e.g., no separate documents for deepfake videos, synthetic complaints, or fabricated safety incidents).",
+      "No structured timeline visualization in the simulator; participants see events (posts, alerts, emails) in chronological order only.",
+      "No pre-labeled roles or responsibilities embedded in the workflow (e.g., no clear indication of who owns legal review vs. comms vs. security).",
+      "Participants can communicate and take actions within the simulator UI (e.g., draft statements, flag content, escalate) but must decide what to do and when without step-by-step prompts."
+    ]
+  },
+  "treatment": {
+    "description": "Scenario-specific, modular playbooks with explicit triggers, actions, and decision gates integrated into the simulator.",
+    "conditions": [
+      "Participants receive scenario-specific playbooks for: (1) deepfake executive video targeting investors/employees, (2) synthetic customer complaints and review bombing, and (3) fabricated safety incidents or product failures.",
+      "Each playbook is structured into modules: (a) early detection triggers, (b) initial triage actions within defined time windows, (c) escalation decision gates, (d) channel-specific response modules (social, messaging apps, news media), and (e) de-escalation and recovery steps.",
+      "Playbooks include simple decision-tree diagrams and checklists embedded or linked from the simulator UI at relevant time points/events.",
+      "The simulator surfaces contextual prompts when a defined trigger condition is met (e.g., \"Playbook 1, Trigger A: Unverified but viral video purporting to show CEO\"), but does not automate actions; participants must still choose among playbook options.",
+      "Role responsibilities (comms lead, legal, security, product owner) are mapped within each playbook; the simulator UI labels actions with the typical responsible role to encourage consistent routing."
+    ]
+  },
+  "workloads": [
+    {
+      "name": "Playbook 1 \u2013 Deepfake Executive Video Targeting Investors or Employees",
+      "description": "Time-sequenced simulation of a deepfake video of a senior executive circulating on social media and messaging apps, targeting investors and internal employees.",
+      "inputs": {
+        "scenario_id": "scenario-deepfake-exec-video-v1",
+        "event_timeline_file": "data/scenarios/deepfake_exec_video/timeline_events.csv",
+        "channels": [
+          "public_social_platforms",
+          "encrypted_messaging_apps",
+          "internal_collaboration_tools",
+          "financial_news_feeds"
+        ],
+        "stakeholder_segments": [
+          "investors",
+          "employees",
+          "journalists",
+          "regulators"
+        ],
+        "playbook_reference": "playbooks/playbook_1_deepfake_exec_video.yaml"
+      },
+      "tasks": [
+        "Classify the incident type and initial severity within the first N events.",
+        "Decide whether and when to escalate internally (e.g., to CEO, board, legal).",
+        "Select and time external communications (e.g., holding statement, investor email, internal all-hands note).",
+        "Decide on platform engagement (e.g., takedown requests, fact-checking partners).",
+        "Log all actions in the simulator for subsequent analysis."
+      ]
+    },
+    {
+      "name": "Playbook 2 \u2013 Synthetic Customer Complaints and Review Bombing",
+      "description": "Simulation of a coordinated synthetic complaint and review bombing campaign spreading across review sites, social media, and support channels.",
+      "inputs": {
+        "scenario_id": "scenario-synthetic-complaints-v1",
+        "event_timeline_file": "data/scenarios/synthetic_complaints/timeline_events.csv",
+        "channels": [
+          "consumer_review_sites",
+          "public_social_platforms",
+          "customer_support_tickets",
+          "owned_web_properties"
+        ],
+        "stakeholder_segments": [
+          "prospective_customers",
+          "existing_customers",
+          "partners",
+          "internal_sales_teams"
+        ],
+        "playbook_reference": "playbooks/playbook_2_synthetic_complaints.yaml"
+      },
+      "tasks": [
+        "Detect that the pattern is coordinated and synthetic rather than organic dissatisfaction.",
+        "Determine when and how to adjust severity level based on volume, velocity, and channel mix.",
+        "Decide on corrective actions (e.g., engage platforms, adjust paid media, direct outreach to key accounts).",
+        "Draft and time public responses on owned channels and review platforms.",
+        "Record all key decisions and timestamps in the simulator."
+      ]
+    },
+    {
+      "name": "Playbook 3 \u2013 Fabricated Safety Incidents or Product Failures",
+      "description": "Simulation of fabricated safety incidents involving the organization\u2019s product, spreading initially via social media and then picked up by local press.",
+      "inputs": {
+        "scenario_id": "scenario-fabricated-safety-v1",
+        "event_timeline_file": "data/scenarios/fabricated_safety_incidents/timeline_events.csv",
+        "channels": [
+          "public_social_platforms",
+          "local_news_outlets",
+          "internal_risk_management_system",
+          "customer_support_tickets"
+        ],
+        "stakeholder_segments": [
+          "customers",
+          "regulators",
+          "employees",
+          "community_stakeholders"
+        ],
+        "playbook_reference": "playbooks/playbook_3_fabricated_safety.yaml"
+      },
+      "tasks": [
+        "Rapidly coordinate between comms, legal, product, and safety/compliance functions.",
+        "Decide on verification steps (e.g., pulling product telemetry, incident logs) before public statements.",
+        "Determine thresholds for notifying regulators or safety authorities.",
+        "Sequence internal vs. external communication to minimize confusion and fear.",
+        "Capture all decision points, rationale, and timings."
+      ]
+    }
+  ],
+  "controls": {
+    "assignment": [
+      "Use randomized assignment of participant teams into two groups: Baseline (no modular playbooks) and Treatment (modular playbooks) with stratification by seniority or function if sample size allows.",
+      "Ensure each group handles all three workloads (deepfake video, synthetic complaints, fabricated safety incident), but vary the order of scenarios using Latin square or randomized counterbalancing to control for learning and fatigue effects."
+    ],
+    "environmental": [
+      "Use identical scenario data (event timelines, content, timestamps) across baseline and treatment conditions.",
+      "Standardize briefing instructions, time limits, and success definitions across conditions.",
+      "Ensure participants do not have access to prior runs\u2019 logs or each other's strategies during the experiment window.",
+      "Disable external internet search or restrict it consistently if using an in-lab setting, to avoid external variability in information acquisition.",
+      "Use the same simulator version, UI configuration, and logging instrumentation for both conditions, with playbook display toggled via configuration."
+    ],
+    "participant": [
+      "Record participant role, seniority, and functional background (e.g., comms, legal, risk, product) to allow post-hoc analysis and balancing.",
+      "If the same individuals must participate in both conditions (within-subjects design), ensure sufficient washout time and use different but structurally comparable scenario variants to limit carryover effects."
+    ]
+  },
+  "metrics": [
+    {
+      "name": "time_to_first_meaningful_action_minutes",
+      "unit": "minutes",
+      "description": "Elapsed time from first scenario event to the first logged action that materially addresses the misinformation (e.g., initiating verification, internal escalation, or external holding statement draft)."
+    },
+    {
+      "name": "time_to_public_response_minutes",
+      "unit": "minutes",
+      "description": "Elapsed time from first scenario event to release of first external communication addressing the misinformation (e.g., public statement, investor update, social post)."
+    },
+    {
+      "name": "decision_consistency_score",
+      "unit": "unitless_index_0_1",
+      "description": "Proportion of key decision points in the scenario where participant actions align with a pre-defined reference decision tree for that scenario (1.0 = fully consistent, 0.0 = fully inconsistent)."
+    },
+    {
+      "name": "escalation_appropriateness_score",
+      "unit": "unitless_index_0_1",
+      "description": "Expert-judged score assessing whether escalations (who was notified, at what severity level, and when) were appropriate to the evolving risk, normalized to [0,1]."
+    },
+    {
+      "name": "channel_coverage_ratio",
+      "unit": "ratio_0_1",
+      "description": "Proportion of affected channels in the scenario where the team took at least one targeted action (monitoring, engagement, messaging) by the end of the simulation."
+    },
+    {
+      "name": "playbook_adherence_score",
+      "unit": "unitless_index_0_1",
+      "description": "For the treatment group, proportion of actions and decisions that follow the recommended modules and decision gates in the scenario playbook; defined as 0 for baseline by design."
+    },
+    {
+      "name": "cognitive_load_self_report",
+      "unit": "likert_1_7",
+      "description": "Participant self-reported perceived difficulty and mental effort using a brief post-scenario survey; averaged per team and scenario."
+    },
+    {
+      "name": "incident_outcome_risk_proxy",
+      "unit": "unitless_index_0_1",
+      "description": "Simulated risk outcome proxy computed from pre-defined scenario model (e.g., proportion of audience exposed before correction, number of simulated negative press pickups), normalized to [0,1] where lower is better."
+    }
+  ],
+  "success_criteria": [
+    "Across all three workloads, the treatment condition shows a statistically and practically significant reduction in median time_to_public_response_minutes versus baseline (e.g., \u226520% reduction, with non-overlapping bootstrap confidence intervals or p < 0.05 in an appropriate test).",
+    "Decision_consistency_score in the treatment group exceeds the baseline group by at least 0.15 (on a 0\u20131 scale) on average across scenarios.",
+    "Channel_coverage_ratio in the treatment group is higher than baseline by at least 0.10 on average, indicating more comprehensive multi-channel handling.",
+    "Incident_outcome_risk_proxy is lower (better) in the treatment group versus baseline across scenarios, indicating that earlier and more consistent action yields better simulated outcomes.",
+    "Cognitive_load_self_report is not materially worse (e.g., increase < 0.5 Likert points on average) in the treatment condition, indicating that modular structure does not meaningfully overload participants."
+  ],
+  "failure_modes": [
+    "No measurable or statistically significant difference between baseline and treatment across key metrics (e.g., time_to_public_response_minutes, decision_consistency_score), suggesting that the modular playbooks as implemented do not improve performance.",
+    "Treatment participants experience significantly higher cognitive_load_self_report (e.g., >1 Likert point increase) and slower response times, indicating that the playbooks add friction or confusion.",
+    "High variance in metrics within conditions (e.g., wildly divergent behaviors across teams) that overwhelms any systematic effect and suggests that training, not playbook structure, is the primary driver.",
+    "Participants ignore or under-utilize treatment playbooks (low playbook_adherence_score) due to poor usability or relevance, confounding the assessment of playbook effectiveness.",
+    "Scenario scripts or simulator logic contain bugs (e.g., incorrect timestamps, missing events), invalidating timing-based metrics and requiring test reruns."
+  ],
+  "required_environment": {
+    "software": [
+      "Python 3.10+",
+      "Jupyter Notebook or JupyterLab for running analysis and configuration notebooks.",
+      "Core Python libraries: pandas, numpy, matplotlib or plotly, pydantic (or similar) for schema validation.",
+      "A lightweight web-based or CLI-based simulator included in the repository (e.g., a Flask or FastAPI app, or a terminal UI) that can: (a) read scenario timelines from CSV/JSON, (b) present events stepwise or in simulated real time, (c) record participant actions with timestamps, and (d) export logs for analysis.",
+      "YAML/JSON support libraries (e.g., PyYAML) for loading playbook definitions."
+    ],
+    "data": [
+      "Synthetic scenario datasets for the three defined workloads, each with: event_id, timestamp (relative or absolute), channel, actor, content_snippet, and optional metadata (e.g., reach_estimate).",
+      "Scenario configuration files specifying triggers, key decision points, and reference decision trees for decision_consistency_score calculation.",
+      "Treatment playbook files in structured format (YAML/JSON) including: triggers, actions, decision gates, roles, and recommended timing windows.",
+      "A ground-truth simulation configuration for incident_outcome_risk_proxy (e.g., simple compartmental model mapping action timings to reach or risk scores)."
+    ],
+    "participants": [
+      "Small cross-functional teams (2\u20136 participants) resembling real-world incident response groups (comms, legal, security/risk, product/operations) or, for pilot testing, one facilitator simulating a team by following pre-documented decision patterns.",
+      "Facilitators or observers to manage the simulation, ensure instructions are followed, and capture qualitative observations.",
+      "Optional expert panel (2\u20133 experienced practitioners) to rate escalation_appropriateness_score post-hoc using exported logs and predefined rubrics."
+    ],
+    "infrastructure": [
+      "A shared repository checkout (e.g., from https://github.com/bookauthority/defending-brand-trust-ai-misinformation) with an experiments/ directory containing this experiment's code, data, and documentation.",
+      "Local machines or a managed environment (e.g., corporate JupyterHub) capable of running the simulator and notebooks.",
+      "Version control (git) to manage changes to playbooks, scenarios, and analysis scripts."
+    ]
+  },
+  "run_instructions": [
+    "Clone the repository and set up the environment:",
+    "1. git clone https://github.com/bookauthority/defending-brand-trust-ai-misinformation.git",
+    "2. cd defending-brand-trust-ai-misinformation",
+    "3. Create and activate a virtual environment (e.g., python -m venv .venv && source .venv/bin/activate or equivalent on Windows).",
+    "4. Install dependencies (e.g., pip install -r requirements.txt).",
+    "",
+    "Prepare experiment assets:",
+    "5. Navigate to experiments/ch06_playbooks_misinformation/ (or equivalent path defined in the repo).",
+    "6. Verify that the following subdirectories exist and contain files: data/scenarios/, playbooks/, config/.",
+    "7. Open config/experiment_config.yaml and confirm: (a) scenario IDs, (b) paths to event_timeline_file for each workload, (c) baseline vs. treatment settings, and (d) simulation parameters (e.g., simulated time compression factor).",
+    "",
+    "Launch the simulator:",
+    "8. From the experiment directory, start the simulator application, e.g.:",
+    "   - For a web-based simulator: python run_simulator.py --config config/experiment_config.yaml",
+    "   - For a CLI-based simulator: python cli_simulator.py --config config/experiment_config.yaml",
+    "9. Verify that you can select a scenario and condition (baseline or treatment) from the simulator UI or via CLI flags (e.g., --scenario scenario-deepfake-exec-video-v1 --condition baseline).",
+    "",
+    "Recruit and brief participants:",
+    "10. Assemble participant teams and assign them to baseline or treatment groups according to the predefined randomization plan (stored in, e.g., config/assignment_plan.csv).",
+    "11. Provide the standard pre-brief document that explains simulator mechanics and overall goals but does not reveal specific triggers or correct decisions.",
+    "12. For the baseline group, provide only the narrative guidance document (docs/baseline_guidance.pdf). For the treatment group, provide the modular playbooks (playbooks/playbook_*.pdf or equivalent rendered formats) and explain their structure briefly.",
+    "",
+    "Run simulation sessions:",
+    "13. For each team and scenario workload:",
+    "    a. Start the simulator with the appropriate condition and scenario.",
+    "    b. Begin the simulation and allow events to appear according to the configured timeline (e.g., one time unit representing five minutes of in-scenario time).",
+    "    c. Instruct participants to discuss and decide on actions, then use the simulator UI to log each action (type, target channel, content or summary, and whether it is internal/external).",
+    "    d. Ensure all major decisions (escalations, public statements, platform contacts) are captured with timestamps.",
+    "    e. Stop the simulation after a predefined scenario end time or when participants have reached a natural conclusion (e.g., all major actions complete).",
+    "14. Immediately after each scenario, administer a short post-scenario survey (e.g., using a form defined in docs/post_scenario_survey.md) to capture cognitive_load_self_report and qualitative feedback.",
+    "",
+    "Export and collect logs:",
+    "15. After each run, export the session log from the simulator (e.g., to logs/sessions/<session_id>.json or .csv), ensuring it contains at least: session_id, team_id, condition, scenario_id, event_stream, actions, timestamps.",
+    "16. Store survey responses in a structured format (e.g., data/surveys/post_scenario_responses.csv) keyed by session_id and participant/team IDs.",
+    "",
+    "Compute metrics:",
+    "17. Open the analysis notebook, e.g., notebooks/analyze_ch06_experiment.ipynb.",
+    "18. Run the notebook cells to:",
+    "    a. Load all session logs and survey data.",
+    "    b. Compute time_to_first_meaningful_action_minutes and time_to_public_response_minutes for each session using defined rules (documented in the notebook).",
+    "    c. Compute decision_consistency_score by aligning actions with the reference decision tree for each scenario (loaded from config/reference_decision_trees.yaml).",
+    "    d. Derive channel_coverage_ratio by mapping actions to scenario channels and comparing with affected_channels lists.",
+    "    e. For treatment sessions, compute playbook_adherence_score by comparing actions/sequences against the relevant playbook modules and decision gates.",
+    "    f. Calculate incident_outcome_risk_proxy using the predefined scenario outcome model (e.g., function or table stored in models/outcome_model.py).",
+    "19. If using expert raters, provide exported action timelines and context to raters (e.g., CSV or PDF summaries), collect their scores for escalation_appropriateness_score, and merge into the analysis dataset.",
+    "",
+    "Analyze results and document findings:",
+    "20. In the analysis notebook, produce comparative plots and summary tables (e.g., distributions of key metrics by condition and scenario).",
+    "21. Apply appropriate statistical tests (e.g., non-parametric tests or bootstrap CIs) to estimate differences between baseline and treatment for primary metrics.",
+    "22. Summarize whether the success_criteria are met, documenting effect sizes, limitations, and any observed failure_modes in a markdown report (e.g., reports/ch06_experiment_results.md).",
+    "23. Commit configuration, anonymized logs, notebooks, and the report back to the repository for reproducibility (excluding any sensitive organization-specific data)."
+  ],
+  "evidence_schema": {
+    "session_log": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string"
+        },
+        "team_id": {
+          "type": "string"
+        },
+        "condition": {
+          "type": "string",
+          "enum": [
+            "baseline",
+            "treatment"
+          ]
+        },
+        "scenario_id": {
+          "type": "string"
+        },
+        "start_time_utc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "end_time_utc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "participant_roles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "participant_id": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string"
+              },
+              "seniority": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "participant_id",
+              "role"
+            ]
+          }
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "event_id": {
+                "type": "string"
+              },
+              "relative_time_minutes": {
+                "type": "number"
+              },
+              "channel": {
+                "type": "string"
+              },
+              "actor_type": {
+                "type": "string"
+              },
+              "content_snippet": {
+                "type": "string"
+              },
+              "metadata": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "event_id",
+              "relative_time_minutes",
+              "channel"
+            ]
+          }
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "action_id": {
+                "type": "string"
+              },
+              "actor_participant_id": {
+                "type": "string"
+              },
+              "action_type": {
+                "type": "string"
+              },
+              "target_channel": {
+                "type": "string"
+              },
+              "is_internal": {
+                "type": "boolean"
+              },
+              "relative_time_minutes": {
+                "type": "number"
+              },
+              "description": {
+                "type": "string"
+              },
+              "linked_event_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "playbook_module_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "For treatment sessions, the ID of the playbook module the participant selected or that best matches the action."
+              }
+            },
+            "required": [
+              "action_id",
+              "actor_participant_id",
+              "action_type",
+              "is_internal",
+              "relative_time_minutes"
+            ]
+          }
+        }
+      },
+      "required": [
+        "session_id",
+        "team_id",
+        "condition",
+        "scenario_id",
+        "start_time_utc",
+        "end_time_utc",
+        "events",
+        "actions"
+      ]
+    },
+    "survey_response": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string"
+        },
+        "participant_id": {
+          "type": "string"
+        },
+        "cognitive_load_self_report": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 7
+        },
+        "perceived_clarity_of_guidance": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 7
+        },
+        "comments": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "session_id",
+        "participant_id",
+        "cognitive_load_self_report"
+      ]
+    },
+    "expert_rating": {
+      "type": "object",
+      "properties": {
+        "rating_id": {
+          "type": "string"
+        },
+        "session_id": {
+          "type": "string"
+        },
+        "rater_id": {
+          "type": "string"
+        },
+        "escalation_appropriateness_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rating_id",
+        "session_id",
+        "rater_id",
+        "escalation_appropriateness_score"
+      ]
+    },
+    "derived_metrics_record": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string"
+        },
+        "condition": {
+          "type": "string",
+          "enum": [
+            "baseline",
+            "treatment"
+          ]
+        },
+        "scenario_id": {
+          "type": "string"
+        },
+        "time_to_first_meaningful_action_minutes": {
+          "type": "number"
+        },
+        "time_to_public_response_minutes": {
+          "type": "number"
+        },
+        "decision_consistency_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "escalation_appropriateness_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "channel_coverage_ratio": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "playbook_adherence_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "cognitive_load_self_report_mean": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 7
+        },
+        "incident_outcome_risk_proxy": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "session_id",
+        "condition",
+        "scenario_id",
+        "time_to_first_meaningful_action_minutes",
+        "time_to_public_response_minutes",
+        "decision_consistency_score",
+        "channel_coverage_ratio",
+        "incident_outcome_risk_proxy"
+      ]
+    }
+  }
+}

@@ -1,0 +1,573 @@
+{
+  "experiment_id": "exp-ch07-comms-under-fire-ab-testing-v1",
+  "hypothesis": "Compared with our current crisis response messaging (baseline), a structured, psychology-informed response template combined with calibrated speed/accuracy tradeoffs (treatment) will (a) improve audience trust and credibility signals (sentiment, perceived trustworthiness, willingness to wait for verification), (b) reduce harmful narrative spread (negative share-of-voice), and (c) maintain legal/compliance guardrails, when tested on synthetic or sandboxed audiences that simulate an AI-driven misinformation incident.",
+  "baseline": {
+    "description": "Current or typical crisis communications response used by the organization, modeled as a generic, one-off statement drafted under time pressure without explicit reference to misinformation psychology, message architecture, or predefined SLAs.",
+    "message_criteria": [
+      "Single primary public statement (e.g., press release or social post) produced without a standardized template.",
+      "No explicit acknowledgment of AI-driven manipulation or deepfake risk unless already widely reported.",
+      "Limited explanation of what is known/unknown; tends to emphasize broad denial or reassurance.",
+      "No clear commitment to future updates (no explicit update cadence or SLA communicated).",
+      "Coordination with legal is ad hoc; text has only a basic compliance review with no documented checklists.",
+      "Internal and external messages may diverge in language and timing (no explicit alignment constraints)."
+    ],
+    "operational_behavior": [
+      "First external message is released as soon as a minimal fact-check passes (e.g., target SLA of 2\u20134 hours), regardless of residual uncertainty.",
+      "Internal messaging is sent either later or not fully aligned, increasing risk of leaks and inconsistent narratives.",
+      "No systematic use of influencers/partners; any amplification is organic or left to agencies without central guidance.",
+      "Impact measurement is limited to high-level media mentions and basic social engagement metrics without sentiment classification or narrative tracking."
+    ]
+  },
+  "treatment": {
+    "description": "A structured AI-misinformation crisis response protocol that uses pre-defined message architecture, explicit speed vs. accuracy SLAs, and coordinated internal/external communications, tested via A/B simulations on synthetic or sandbox audiences.",
+    "components": {
+      "message_architecture": [
+        "Opening that explicitly acknowledges uncertainty and AI manipulation risk where appropriate (e.g., deepfake indicators).",
+        "Clear separation of what is known, unknown, and being investigated, presented in plain, non-legalistic language.",
+        "Explicit commitment to an update cadence (e.g., initial holding statement within X minutes; full update within Y hours).",
+        "Short explanation of verification steps being taken (e.g., forensic analysis, log review, third-party validation) without disclosing sensitive operational details.",
+        "Values-anchored framing that connects actions to safety, integrity, and stakeholder protection.",
+        "Explicit guidance on what employees, customers, and partners should do or not do (calls to action or to inaction)."
+      ],
+      "speed_vs_accuracy_slas": [
+        "Tiered SLA matrix defined by severity and audience (e.g., internal employees vs. public vs. regulators).",
+        "Use of short holding statements that prioritize speed but are tightly scoped and clearly provisional.",
+        "Full statements only after cross-functional sign-off including legal, with target windows per severity tier.",
+        "Pre-approved phrase bank that legal has reviewed in advance, enabling rapid assembly of compliant messages."
+      ],
+      "coordination_protocol": [
+        "Internal message precedes or is simultaneous with external release, using consistent core facts and framing.",
+        "Unified briefing pack for spokespeople, agencies, and key partners with aligned talking points and Q&A.",
+        "Designated approval workflow with explicit decision rights (who can green-light a holding statement vs. full update)."
+      ],
+      "amplification_strategy": [
+        "Pre-identified, pre-briefed influencers/partners/advocates (e.g., industry bodies, NGOs, experts) who can credibly restate or validate core messages.",
+        "Structured outreach messages tailored for partners, including shareable links, short posts, and disclaimers.",
+        "Guidelines for employees on resharing or commenting to avoid off-message escalation."
+      ],
+      "measurement_hooks": [
+        "UTM parameters and trackable links in statements to support narrative and reach analysis.",
+        "Consistent hashtags and key phrases to simplify monitoring and sentiment clustering.",
+        "Pre-defined analytics notebook to ingest and visualize sentiment, reach, narrative prevalence, and click-through behavior over simulated timelines."
+      ]
+    }
+  },
+  "workloads": [
+    {
+      "name": "workload-1-synthetic-audience-social-feed-simulation",
+      "description": "Simulated social-media environment with synthetic users exposed to an AI-driven misinformation event and then to either baseline or treatment response messages. Used to assess sentiment, trust, and narrative spread under time-pressured conditions.",
+      "inputs": {
+        "misinformation_scenario": {
+          "type": "deepfake-executive-video",
+          "description": "Synthetic deepfake video alleging the CEO made discriminatory remarks in an internal meeting, seeded across a mock social platform.",
+          "seed_posts": 50,
+          "initial_sentiment_distribution": {
+            "negative": 0.65,
+            "neutral": 0.25,
+            "positive": 0.1
+          }
+        },
+        "audience_population": {
+          "size": 10000,
+          "segments": [
+            "employees",
+            "customers",
+            "investors",
+            "general_public"
+          ],
+          "properties_per_user": [
+            "segment",
+            "baseline_trust_score",
+            "propensity_to_share_misinformation",
+            "sensitivity_to_authoritative_corrections",
+            "sensitivity_to_speed_of_response",
+            "jurisdiction_or_region"
+          ]
+        },
+        "response_variants": {
+          "baseline_message": "Crisis statement in plain text or JSON, representing current typical practice.",
+          "treatment_message": "Templated response aligned with treatment message architecture, with placeholders filled for the scenario."
+        },
+        "timing_parameters": {
+          "misinformation_start_time": "t0",
+          "baseline_response_release_time": "t0 + X minutes/hours",
+          "treatment_response_release_time": "t0 + Y minutes/hours (can be equal to X in one run, later in another to simulate tradeoffs)",
+          "simulation_horizon": "e.g., 24 hours of simulated engagement"
+        }
+      },
+      "execution": {
+        "steps": [
+          "Generate synthetic audience with specified behavioral parameters.",
+          "Seed misinformation content at t0 and simulate engagement (views, shares, comments) for a defined pre-response period.",
+          "At configured times, inject either baseline or treatment messages into the feed for randomized user subsets (A/B assignment).",
+          "Simulate probabilistic user behaviors (view, share, like, comment, ignore, change belief) as functions of message content, trust, and timing.",
+          "Log all events (exposures, interactions, sentiment labels, belief-updates) with timestamps and user IDs.",
+          "Export event logs to the analysis notebook for metric computation."
+        ]
+      }
+    },
+    {
+      "name": "workload-2-message-copy-ab-test-on-sandboxed-panel",
+      "description": "Text-only A/B test of message variants evaluated by a synthetic or sandboxed panel (e.g., survey respondents, internal users, or LLM-generated proxy raters) rating trust, clarity, and likelihood to update beliefs.",
+      "inputs": {
+        "panel": {
+          "size": 2000,
+          "segments": [
+            "employees",
+            "customers",
+            "investors",
+            "regulators"
+          ],
+          "attributes": [
+            "baseline_trust_in_brand",
+            "risk_aversion",
+            "prior_exposure_to_misinformation_about_brand"
+          ]
+        },
+        "message_variants": {
+          "baseline": [
+            "baseline_statement_v1"
+          ],
+          "treatment": [
+            "treatment_statement_v1",
+            "treatment_statement_with_partner_quote_v2"
+          ]
+        },
+        "rating_form": {
+          "questions": [
+            "Perceived honesty",
+            "Perceived competence",
+            "Clarity about what happened",
+            "Perceived respect for stakeholders",
+            "Likelihood you would wait for further updates before reacting",
+            "Likelihood you would share the organization\u2019s message"
+          ],
+          "scale": "Likert 1\u20137 or 1\u20135"
+        }
+      },
+      "execution": {
+        "steps": [
+          "Randomly assign panel members to baseline or one of the treatment variants (between-subjects design).",
+          "Present standardized scenario description followed by the assigned message.",
+          "Collect numeric ratings for each question and optional free-text feedback.",
+          "Store anonymized responses in a structured table for analysis.",
+          "Run analysis to compare distributions of ratings across variants and segments."
+        ]
+      }
+    },
+    {
+      "name": "workload-3-sentiment-and-narrative-shift-dashboard",
+      "description": "Offline analysis pipeline and dashboard that consumes logs from Workload 1 and/or historical-like synthetic data to quantify the impact of baseline vs. treatment responses on sentiment, reach, and behavior over time.",
+      "inputs": {
+        "event_logs": [
+          "user_id",
+          "timestamp",
+          "content_id",
+          "content_type (misinformation, baseline_response, treatment_response, partner_message, employee_message)",
+          "interaction_type (view, like, share, comment)",
+          "predicted_sentiment_label",
+          "narrative_cluster_id",
+          "user_segment"
+        ],
+        "metadata": {
+          "response_release_times": {
+            "baseline": "t_baseline",
+            "treatment": "t_treatment"
+          },
+          "severity_tier": "e.g., high severity",
+          "SLA_targets": {
+            "holding_statement": "target_minutes",
+            "full_update": "target_hours"
+          }
+        }
+      },
+      "execution": {
+        "steps": [
+          "Ingest event logs into a data frame or database.",
+          "Compute time-bucketed metrics for baseline and treatment cohorts (e.g., per 15 minutes or hour).",
+          "Apply sentiment model or rule-based sentiment classifier to content and comments if not pre-computed.",
+          "Cluster content into narratives (e.g., misinformation narrative vs. corrective narrative vs. unrelated chatter).",
+          "Generate comparative visualizations for key metrics (sentiment over time, share-of-voice, engagement rate, narrative prevalence).",
+          "Export dashboard views suitable for executive review (e.g., static charts or interactive notebook cells)."
+        ]
+      }
+    }
+  ],
+  "controls": {
+    "randomization": [
+      "Random assignment of users or panelists to baseline vs. treatment groups (and among multiple treatment variants where applicable).",
+      "Random seeding of misinformation exposure order when feasible to avoid order effects."
+    ],
+    "comparability": [
+      "Ensure baseline and treatment cohorts have similar distributions across key attributes: audience segments, baseline trust levels, regions, and engagement propensity.",
+      "Use the same synthetic misinformation content across runs for all variants.",
+      "Use identical timing parameters for response release where testing the effect of message content; manipulate timing only in dedicated speed vs. accuracy sub-experiments."
+    ],
+    "blinding": [
+      "Sandboxed human raters should not be informed whether a message is baseline or treatment.",
+      "Analysis notebooks should be able to run with message_variant labels masked during exploratory analysis to reduce bias (optional)."
+    ],
+    "legal_and_policy_constraints": [
+      "All simulated messages must be clearly marked as synthetic and must not be deployed to real, uncontrolled public channels without legal and ethics review.",
+      "When using internal employees as raters, ensure participation is voluntary and data handling respects privacy and labor policies."
+    ]
+  },
+  "metrics": [
+    {
+      "name": "avg_trust_score",
+      "description": "Average perceived trustworthiness/honesty rating of the organization\u2019s response among exposed users or raters.",
+      "unit": "Likert scale units (e.g., 1\u20137)"
+    },
+    {
+      "name": "avg_clarity_score",
+      "description": "Average rating of how clearly the message explains what happened, what is unknown, and next steps.",
+      "unit": "Likert scale units"
+    },
+    {
+      "name": "willingness_to_wait_for_updates",
+      "description": "Average self-reported likelihood that an audience member will wait for further updates before taking negative action (e.g., selling stock, canceling service, posting criticism).",
+      "unit": "Likert scale units"
+    },
+    {
+      "name": "misinformation_share_of_voice",
+      "description": "Proportion of total relevant conversation volume dominated by the misinformation narrative vs. corrective/official narratives over the simulation window.",
+      "unit": "percentage of conversation volume"
+    },
+    {
+      "name": "negative_sentiment_rate",
+      "description": "Percentage of posts/comments classified as negative toward the brand in the monitored time window.",
+      "unit": "percentage of analyzed posts/comments"
+    },
+    {
+      "name": "time_to_sentiment_stabilization",
+      "description": "Elapsed time from misinformation onset to the point where net sentiment (e.g., positive minus negative) remains within a defined band for a sustained period.",
+      "unit": "minutes or hours"
+    },
+    {
+      "name": "corrective_message_reach",
+      "description": "Number of unique users exposed to any official or partner corrective messages.",
+      "unit": "unique users"
+    },
+    {
+      "name": "misinformation_reshare_rate",
+      "description": "Rate at which misinformation content is reshared after the organization\u2019s response is issued.",
+      "unit": "shares per 1,000 impressions"
+    },
+    {
+      "name": "response_sla_adherence",
+      "description": "Degree to which actual release times for holding statements and full updates meet predefined SLAs.",
+      "unit": "percentage of responses within SLA; or minutes deviation from SLA"
+    },
+    {
+      "name": "behavioral_intent_shift",
+      "description": "Change in self-reported likelihood of taking adverse actions (e.g., boycotting, selling stock) before vs. after reading the response.",
+      "unit": "percentage point change; or Likert scale delta"
+    }
+  ],
+  "success_criteria": {
+    "primary": [
+      "avg_trust_score in the treatment group is at least 0.4 Likert units higher than in the baseline group, with statistical significance at p < 0.05 under appropriate tests.",
+      "misinformation_share_of_voice in the treatment cohort is at least 10 percentage points lower than in the baseline cohort by the end of the simulation window.",
+      "negative_sentiment_rate for treatment is at least 15% lower relative (or 5 percentage points lower absolute) than baseline in the post-response window."
+    ],
+    "secondary": [
+      "willingness_to_wait_for_updates is at least 0.3 Likert units higher under treatment, indicating greater tolerance for accuracy-focused timing.",
+      "time_to_sentiment_stabilization is reduced by at least 20% under treatment compared with baseline.",
+      "behavioral_intent_shift is more favorable under treatment (e.g., smaller increase or larger decrease in intent to take adverse actions).",
+      "response_sla_adherence in treatment conditions remains within predefined organizational targets (e.g., 90% of responses within SLA), ensuring improvements do not come at unacceptable speed costs."
+    ],
+    "decision_rule": "If primary criteria 1 and 2 are met and no critical legal/compliance breaches are identified in treatment messages, the treatment protocol should be considered for incorporation into the organization\u2019s crisis communications playbooks, with refinement based on segment-level insights."
+  },
+  "failure_modes": [
+    {
+      "name": "overly_cautious_messaging_reduces_clarity",
+      "description": "Treatment messages might become so hedged (to satisfy legal and uncertainty constraints) that audiences perceive them as evasive, lowering trust and clarity scores.",
+      "detection": "avg_clarity_score and avg_trust_score not significantly higher (or even lower) than baseline in Workload 2; qualitative feedback referencing vagueness or corporate-speak."
+    },
+    {
+      "name": "speed_cost_of_coordination",
+      "description": "Additional coordination and legal review in treatment may delay responses beyond SLAs, amplifying narrative damage despite higher-quality content.",
+      "detection": "response_sla_adherence significantly worse for treatment scenarios; time_to_sentiment_stabilization not improved or worsened despite better trust scores among those who see the message."
+    },
+    {
+      "name": "backfire_effect_in_certain_segments",
+      "description": "Some audience segments (e.g., highly skeptical or adversarial) may interpret explicit references to AI deepfakes or verification processes as suspicious, increasing negative sentiment or belief in the misinformation.",
+      "detection": "Segment-level analysis shows increased negative_sentiment_rate, higher misinformation_reshare_rate, or worsening behavioral_intent_shift for specific segments under treatment compared with baseline."
+    },
+    {
+      "name": "overreliance_on_influencers",
+      "description": "Use of partners or influencers as amplifiers might be perceived as astroturfing or inauthentic if not chosen carefully.",
+      "detection": "Spikes in negative sentiment specifically mentioning partners/influencers or accusing coordinated PR campaigns; narrative clusters focused on perceived manipulation rather than the core incident."
+    },
+    {
+      "name": "measurement_bias_and_overfitting_to_synthetic_audiences",
+      "description": "Results may be overly optimistic or not generalize if synthetic audience behavior models are poorly calibrated to real stakeholders.",
+      "detection": "Large discrepancies between simulated outcomes and any available historical incident data; sensitivity analysis showing results change drastically under minor parameter tweaks."
+    }
+  ],
+  "required_environment": {
+    "compute": [
+      "Local machine or cloud notebook environment (e.g., Jupyter, VS Code) capable of running Python scripts and basic data analysis.",
+      "Optional containerized setup (e.g., Docker) with preconfigured dependencies for reproducibility."
+    ],
+    "software_dependencies": [
+      "Python 3.9+",
+      "Data and scientific libraries: pandas, numpy, scipy, scikit-learn (or equivalent).",
+      "Simulation and plotting: matplotlib and/or seaborn, plotly or similar for interactive dashboards.",
+      "Optional NLP/sentiment: transformers or equivalent for model-based sentiment; or a simpler lexicon-based package.",
+      "Jupyter or similar notebook interface.",
+      "Optional: SQLite or lightweight database driver if storing logs beyond CSV/Parquet."
+    ],
+    "data_requirements": [
+      "Synthetic audience generator (provided in repository) with configurable parameters for size, segment mix, and behavioral tendencies.",
+      "Synthetic misinformation content and corresponding baseline/treatment message templates defined in structured files (JSON/YAML/Markdown).",
+      "No real PII by default; if an organization chooses to plug in internal test data, it must comply with its privacy, legal, and security policies."
+    ],
+    "governance_and_approvals": [
+      "Approval from corporate communications and legal teams before adapting templates for any live or employee-facing tests.",
+      "Clear labeling and isolation of any experiments that involve real employees or customers (e.g., internal surveys) to avoid confusion with live incidents."
+    ]
+  },
+  "run_instructions": [
+    "Clone the repository https://github.com/bookauthority/defending-brand-trust-ai-misinformation and navigate to the experiments/ch07_communications_under_fire/ directory (or equivalent path defined in the repo).",
+    "Set up the environment by following the provided README, typically: create and activate a virtual environment, then install dependencies (e.g., `pip install -r requirements.txt`).",
+    "Review configuration files (e.g., `config_misinformation_scenario.yml`, `config_messages.yml`, `config_simulation.yml`) to understand default parameters for scenarios, audience properties, and response SLAs.",
+    "Customize baseline and treatment messages for your organization using the provided templates, ensuring they align with your legal guidance while preserving the structural distinctions between baseline and treatment.",
+    "Run Workload 1 (social feed simulation) using the dedicated script or notebook (e.g., `01_run_social_simulation.ipynb` or `run_social_simulation.py`): this will generate synthetic engagement logs for both baseline and treatment cohorts.",
+    "Run Workload 2 (message copy A/B test) using the appropriate notebook (e.g., `02_message_ab_test.ipynb`): either use synthetic panel responses or plug in your own sandboxed survey data, keeping the experimental design consistent.",
+    "Execute Workload 3 (sentiment and narrative shift dashboard) via the analysis notebook (e.g., `03_analyze_response_impact.ipynb`): point it at the generated event logs and survey outputs to compute all defined metrics and render visualizations.",
+    "Inspect metrics and charts; compare baseline vs. treatment performance overall and by audience segment. Document findings, focusing on where treatment improves trust and narrative control and where it may introduce new risks or tradeoffs.",
+    "Adjust message templates, SLAs, and coordination rules based on insights; optionally re-run simulations with updated parameters to test revised designs.",
+    "Translate validated patterns into your operational playbooks, including checklists for message architecture, pre-approved wording, SLA matrices, and partner engagement guidelines, ensuring legal and executive sign-off."
+  ],
+  "evidence_schema": {
+    "tables": [
+      {
+        "name": "synthetic_users",
+        "fields": [
+          {
+            "name": "user_id",
+            "type": "string"
+          },
+          {
+            "name": "segment",
+            "type": "string"
+          },
+          {
+            "name": "baseline_trust_score",
+            "type": "float"
+          },
+          {
+            "name": "propensity_to_share_misinformation",
+            "type": "float"
+          },
+          {
+            "name": "sensitivity_to_authoritative_corrections",
+            "type": "float"
+          },
+          {
+            "name": "sensitivity_to_speed_of_response",
+            "type": "float"
+          },
+          {
+            "name": "region",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "name": "messages",
+        "fields": [
+          {
+            "name": "message_id",
+            "type": "string"
+          },
+          {
+            "name": "variant",
+            "type": "string",
+            "description": "baseline or specific treatment variant identifier"
+          },
+          {
+            "name": "channel",
+            "type": "string",
+            "description": "e.g., social, internal_email, press_release"
+          },
+          {
+            "name": "content_text",
+            "type": "string"
+          },
+          {
+            "name": "release_time",
+            "type": "timestamp"
+          },
+          {
+            "name": "sla_type",
+            "type": "string",
+            "description": "holding_statement or full_update"
+          }
+        ]
+      },
+      {
+        "name": "event_logs",
+        "fields": [
+          {
+            "name": "event_id",
+            "type": "string"
+          },
+          {
+            "name": "timestamp",
+            "type": "timestamp"
+          },
+          {
+            "name": "user_id",
+            "type": "string"
+          },
+          {
+            "name": "content_id",
+            "type": "string"
+          },
+          {
+            "name": "content_type",
+            "type": "string",
+            "description": "misinformation, baseline_response, treatment_response, partner_message, employee_message"
+          },
+          {
+            "name": "interaction_type",
+            "type": "string",
+            "description": "view, like, share, comment"
+          },
+          {
+            "name": "sentiment_label",
+            "type": "string",
+            "description": "positive, neutral, negative"
+          },
+          {
+            "name": "narrative_cluster_id",
+            "type": "string"
+          },
+          {
+            "name": "cohort",
+            "type": "string",
+            "description": "baseline or treatment"
+          }
+        ]
+      },
+      {
+        "name": "panel_ratings",
+        "fields": [
+          {
+            "name": "response_id",
+            "type": "string"
+          },
+          {
+            "name": "panelist_id",
+            "type": "string"
+          },
+          {
+            "name": "segment",
+            "type": "string"
+          },
+          {
+            "name": "variant",
+            "type": "string"
+          },
+          {
+            "name": "trust_score",
+            "type": "float"
+          },
+          {
+            "name": "clarity_score",
+            "type": "float"
+          },
+          {
+            "name": "respect_score",
+            "type": "float"
+          },
+          {
+            "name": "willingness_to_wait_score",
+            "type": "float"
+          },
+          {
+            "name": "share_likelihood_score",
+            "type": "float"
+          },
+          {
+            "name": "behavioral_intent_pre",
+            "type": "float"
+          },
+          {
+            "name": "behavioral_intent_post",
+            "type": "float"
+          },
+          {
+            "name": "free_text_feedback",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "name": "metrics_summary",
+        "fields": [
+          {
+            "name": "run_id",
+            "type": "string"
+          },
+          {
+            "name": "cohort",
+            "type": "string",
+            "description": "baseline or treatment"
+          },
+          {
+            "name": "segment",
+            "type": "string"
+          },
+          {
+            "name": "avg_trust_score",
+            "type": "float"
+          },
+          {
+            "name": "avg_clarity_score",
+            "type": "float"
+          },
+          {
+            "name": "willingness_to_wait_for_updates",
+            "type": "float"
+          },
+          {
+            "name": "misinformation_share_of_voice",
+            "type": "float"
+          },
+          {
+            "name": "negative_sentiment_rate",
+            "type": "float"
+          },
+          {
+            "name": "time_to_sentiment_stabilization",
+            "type": "float"
+          },
+          {
+            "name": "corrective_message_reach",
+            "type": "integer"
+          },
+          {
+            "name": "misinformation_reshare_rate",
+            "type": "float"
+          },
+          {
+            "name": "response_sla_adherence",
+            "type": "float"
+          },
+          {
+            "name": "behavioral_intent_shift",
+            "type": "float"
+          }
+        ]
+      }
+    ],
+    "reproducibility_notes": [
+      "All random processes (e.g., user generation, behavior simulation, cohort assignment) must accept a configurable random seed stored alongside run metadata.",
+      "Each experiment run should produce a unique run_id, with configurations (parameters, seed, message file hashes) logged in a separate run_config file or table to enable exact reruns.",
+      "No outcome values should be hard-coded in the repository; notebooks and scripts should compute metrics from the logged events and ratings at run time."
+    ]
+  }
+}

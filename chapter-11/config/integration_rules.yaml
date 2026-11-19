@@ -1,0 +1,14 @@
+# Example routing rules for the treatment integration service.
+# This file is descriptive only in this minimal offline experiment but mirrors
+# what non-engineers would edit in a real deployment.
+
+rules:
+  - name: high_severity_social_to_comms
+    min_severity: 3
+    channels: [twitter, tiktok, news]
+    team: comms
+
+  - name: deepfake_or_market_rumor_security
+    min_severity: 4
+    channels: [twitter, tiktok, youtube, internal_tipline]
+    team: security

@@ -1,0 +1,372 @@
+{
+  "experiment_id": "exp-ch08-trust-metrics-dashboard-v1",
+  "hypothesis": "A structured trust and resilience metrics system\u2014implemented as an executive dashboard that combines leading and lagging indicators, incident analytics, and financial linkages\u2014will (a) improve executives\u2019 ability to detect material trust degradation sooner and (b) produce clearer, more decisionable board reports, compared with an unstructured, ad-hoc metrics approach using the same underlying data.",
+  "baseline": {
+    "description": "Ad-hoc metrics and static reporting using the same raw data sources, but without a defined trust/resilience metric framework, incident analytics pipeline, or integrated executive dashboard.",
+    "key_characteristics": [
+      "Separate, manually assembled spreadsheets for social sentiment, incident tickets, PR coverage, and financial KPIs.",
+      "No standardized incident analytics (e.g., Time to Detect, Time to Respond) or agreed metric definitions.",
+      "No explicit distinction between leading indicators (early signals) and lagging indicators (outcomes).",
+      "Executive and board reports created as static slide decks with metric selection and commentary left to each preparer\u2019s judgment.",
+      "No systematic linkage between trust metrics and financial or strategic KPIs; any connections are narrative-only."
+    ],
+    "implementation_outline": [
+      "Ingest the same synthetic datasets as the treatment (sentiment, incident logs, web analytics, financial series).",
+      "Produce per-period CSV or spreadsheet exports with minimal cleaning but no feature engineering beyond obvious totals and simple averages.",
+      "Create a basic, flat report table for each dataset (e.g., weekly or monthly aggregations) without cross-linkages or derived indicators.",
+      "Use a simple, unweighted overall sentiment score (e.g., average sentiment over all posts) and basic incident counts."
+    ]
+  },
+  "treatment": {
+    "description": "An integrated trust and resilience measurement system built on the same input data as the baseline, but implemented with a clear metric taxonomy, incident analytics, trust-to-financial linkages, and an executive/board-ready dashboard.",
+    "key_characteristics": [
+      "Formal metric catalog with standardized definitions for trust, resilience, and incident performance metrics.",
+      "Leading and lagging indicators explicitly separated and visualized together for context.",
+      "Incident analytics pipeline computing Time to Detect (TTD), Time to Respond (TTR), containment time, and outcome metrics.",
+      "Attribution views that compare periods with and without misinformation incidents while controlling for background trends.",
+      "KPI linkage panes that correlate trust/resilience measures with financial and strategic metrics (e.g., revenue, churn, NPS).",
+      "Executive dashboard that surfaces a small, curated set of indicators with thresholds, red/amber/green statuses, and explanatory annotations.",
+      "Board reporting templates auto-populated from dashboard data with standardized narrative sections."
+    ],
+    "implementation_outline": [
+      "Ingest the same synthetic datasets as baseline into a notebook or BI tool.",
+      "Define a data model that relates entities such as Time, Channel, Incident, Audience Segment, and Financial Metric.",
+      "Engineer features for trust metrics (e.g., channel-weighted sentiment, misinformation-mention rates), resilience metrics (e.g., incident recovery curves), and incident lifecycle timestamps.",
+      "Implement attribution lenses such as pre/post incident comparisons and matched baseline periods.",
+      "Construct an executive dashboard view and a board summary view using the engineered metrics.",
+      "Implement configurable thresholds for key metrics to support automated status summarization (e.g., RAG flags)."
+    ]
+  },
+  "workloads": [
+    {
+      "name": "synthetic_trust_and_incident_dataset_generation",
+      "description": "Generate and/or load synthetic but realistic datasets representing brand trust signals, misinformation incidents, and financial outcomes over a 12\u201324 month period.",
+      "inputs": [
+        "Synthetic social media sentiment time series by channel (e.g., Twitter/X, Facebook, news, owned channels).",
+        "Synthetic incident logs with timestamps (alert_time, classification_time, public_statement_time, containment_time, resolved_time), severity, channel, incident_type, and a flag for misinformation vs other crises.",
+        "Web and search analytics (e.g., branded search volume, site visits to critical properties, help center traffic).",
+        "Financial and strategic outcome metrics (e.g., weekly revenue, conversion rate, churn, NPS, call center volume)."
+      ],
+      "steps": [
+        "Create or load base time index (e.g., daily for 730 days).",
+        "Simulate baseline sentiment by channel with realistic noise and seasonality.",
+        "Inject a configurable number of synthetic misinformation incidents with defined start and end periods and intensity profiles.",
+        "Impose incident effects on sentiment, search volume, and financial KPIs (e.g., a transient dip with varying recovery rates).",
+        "Export the resulting tables as CSV/Parquet for both baseline and treatment pipelines."
+      ],
+      "shared_between_baseline_and_treatment": true
+    },
+    {
+      "name": "baseline_flat_reporting_pipeline",
+      "description": "Aggregate the synthetic datasets into simple, unlinked, static periodic tables without incident analytics or derived trust/resilience indicators.",
+      "inputs": [
+        "Synthetic sentiment data by time and channel.",
+        "Synthetic incident log data.",
+        "Synthetic web/search analytics.",
+        "Synthetic financial metrics."
+      ],
+      "steps": [
+        "Aggregate each dataset to a common reporting cadence (e.g., weekly).",
+        "Compute basic summary stats per period: average sentiment, total posts, incident counts by severity, total revenue, total site visits.",
+        "Export aggregated tables as CSVs and optionally a single flat joined table without engineered features.",
+        "Produce a static baseline report notebook or HTML/PDF summarizing the raw metrics via simple line and bar charts."
+      ],
+      "shared_between_baseline_and_treatment": false
+    },
+    {
+      "name": "treatment_metric_framework_and_dashboard_pipeline",
+      "description": "Implement the full trust/resilience metric framework, attribution views, incident analytics, and dashboards using the same synthetic data as the baseline.",
+      "inputs": [
+        "Same synthetic sentiment data, incident logs, web/search analytics, and financial metrics used in the baseline."
+      ],
+      "steps": [
+        "Define a metric catalog data structure (e.g., YAML/JSON or table) listing: metric_name, definition, formula, unit, type (leading/lagging/incidence), and primary audience.",
+        "Engineer trust-related metrics per period, such as channel-weighted sentiment index, misinformation-specific mention rate, and trust volatility.",
+        "Engineer resilience and incident performance metrics, including TTD, TTR, containment time, total incident duration, and recovery half-life for key KPIs.",
+        "Implement attribution comparisons: pre/post incident windows, synthetic control or trend-extrapolated baselines, and cross-channel breakdowns of impact.",
+        "Compute correlations and simple regression-based sensitivities between trust/resilience metrics and financial KPIs over time.",
+        "Build an executive dashboard with panels for leading indicators, lagging indicators, incident analytics, and financial linkages, including RAG thresholds.",
+        "Build a board reporting summary view with a concise subset of metrics, incident highlights, and templated narrative sections with auto-populated figures.",
+        "Export all derived metrics and dashboard views in a reproducible format (e.g., notebook plus BI export)."
+      ],
+      "shared_between_baseline_and_treatment": false
+    },
+    {
+      "name": "decision_simulation_and_user_story_workload",
+      "description": "Simulate executive and board decision-making tasks over a fixed historical window using both baseline and treatment outputs, to assess interpretability and decision-clarity of the measurement systems.",
+      "inputs": [
+        "Baseline periodic summary tables and static charts.",
+        "Treatment dashboard views and incident analytics outputs.",
+        "Scenario prompts describing executive questions (e.g., \u201cIs trust recovering after the Q3 deepfake incident?\u201d)."
+      ],
+      "steps": [
+        "Define a standard set of executive decision questions for the evaluation period (e.g., 5\u201310 questions).",
+        "For each question, use the baseline outputs to derive an answer and document the steps, ambiguities, and required manual calculations.",
+        "Repeat the process using the treatment dashboard, documenting the number of views consulted, clarity of signal, and remaining ambiguities.",
+        "Record synthetic evaluation metrics (e.g., number of steps, number of required manual joins, presence/absence of specific required metrics) as part of the evidence, without inventing any success outcomes.",
+        "Package guidance for how real organizations could replicate the evaluation with real users, without prescribing or simulating their actual behavior."
+      ],
+      "shared_between_baseline_and_treatment": true
+    }
+  ],
+  "controls": {
+    "data_controls": [
+      "Use identical synthetic input datasets for both baseline and treatment runs.",
+      "Fix random seeds in data generation scripts to ensure reproducibility.",
+      "Use the same time window, reporting cadence, and units for both conditions."
+    ],
+    "methodological_controls": [
+      "Keep the set of executive decision questions identical across baseline and treatment evaluation.",
+      "Use the same analysis environment (e.g., same notebook stack, same BI tool version) for baseline and treatment visualizations.",
+      "Document any changes in data cleaning, feature engineering, or aggregation that go beyond the defined experimental manipulations."
+    ],
+    "scope_controls": [
+      "Limit the evaluation window to a defined period (e.g., last 12 months) that contains at least one major synthetic misinformation incident and several non-incident fluctuations.",
+      "Restrict the metric set in both conditions to those computable from the shared input data, avoiding any external or proprietary signals.",
+      "Do not introduce ML model performance metrics (e.g., precision/recall) unless directly relevant to trust/incident measures and built from the same inputs."
+    ]
+  },
+  "metrics": [
+    {
+      "name": "num_metrics_in_catalog",
+      "unit": "count",
+      "description": "Number of distinct trust, resilience, incident, and linkage metrics defined in the treatment metric catalog."
+    },
+    {
+      "name": "metric_definition_completeness",
+      "unit": "percentage",
+      "description": "Share of metrics in the catalog that have complete definitions (name, formula, unit, frequency, owner, audience)."
+    },
+    {
+      "name": "leading_indicator_coverage",
+      "unit": "percentage",
+      "description": "Proportion of key risk surfaces (e.g., channels, audience segments, incident types) that are represented by at least one leading indicator metric."
+    },
+    {
+      "name": "lagging_indicator_coverage",
+      "unit": "percentage",
+      "description": "Proportion of key business outcomes (e.g., revenue, churn, NPS) that are represented by at least one lagging indicator metric."
+    },
+    {
+      "name": "incident_ttd_median",
+      "unit": "hours",
+      "description": "Median Time to Detect for misinformation incidents within the chosen period, computed from incident logs."
+    },
+    {
+      "name": "incident_ttr_median",
+      "unit": "hours",
+      "description": "Median Time to Respond (e.g., from detection to first authoritative public response)."
+    },
+    {
+      "name": "incident_recovery_half_life_median",
+      "unit": "days",
+      "description": "Median time for selected trust or financial KPIs to recover half of their incident-induced deviation from baseline."
+    },
+    {
+      "name": "trust_to_financial_correlation_strength",
+      "unit": "dimensionless (correlation coefficient or R^2 range)",
+      "description": "Summary statistic for the relationship between one or more trust metrics and key financial KPIs over time."
+    },
+    {
+      "name": "executive_question_metric_availability_baseline",
+      "unit": "percentage",
+      "description": "For a fixed set of decision questions, proportion that can be answered from baseline outputs without additional data derivation."
+    },
+    {
+      "name": "executive_question_metric_availability_treatment",
+      "unit": "percentage",
+      "description": "For the same decision questions, proportion that can be answered from treatment outputs without additional data derivation."
+    },
+    {
+      "name": "report_construction_steps_baseline",
+      "unit": "count",
+      "description": "Number of discrete data manipulation or lookup steps required to build a quarterly board trust report under the baseline condition."
+    },
+    {
+      "name": "report_construction_steps_treatment",
+      "unit": "count",
+      "description": "Number of discrete data manipulation or lookup steps required to build the same quarterly board report using the treatment dashboard and templates."
+    },
+    {
+      "name": "num_attribution_views",
+      "unit": "count",
+      "description": "Count of distinct attribution analyses (e.g., pre/post incident, channel comparison, baseline-adjusted impact) implemented in the treatment."
+    },
+    {
+      "name": "dashboard_refresh_latency",
+      "unit": "minutes",
+      "description": "Elapsed time from new data availability (e.g., latest day or week) to updated metrics and visualizations appearing in the dashboard."
+    }
+  ],
+  "success_criteria": [
+    "The treatment pipeline runs reproducibly end-to-end using only the documented inputs and environment, producing the defined metrics and dashboard views without manual intervention.",
+    "The metric catalog in the treatment reaches at least a predefined minimal completeness level (e.g., >= 80% of metrics fully defined) as measured by metric_definition_completeness, while the baseline has no such catalog.",
+    "The treatment implements explicit leading and lagging indicator coverage for all pre-identified key risk surfaces and business outcomes (leading_indicator_coverage and lagging_indicator_coverage reaching predefined thresholds; baseline may or may not).",
+    "Incident analytics metrics (incident_ttd_median, incident_ttr_median, incident_recovery_half_life_median) are successfully computed for all synthetic misinformation incidents in the evaluation period, demonstrating the feasibility of the measurement design.",
+    "The treatment supports a higher proportion of predefined executive decision questions directly from its outputs (executive_question_metric_availability_treatment > executive_question_metric_availability_baseline), even if the magnitude of that difference is left for empirical study.",
+    "The number of discrete steps needed to assemble a board-ready trust report from treatment outputs (report_construction_steps_treatment) is less than or equal to that for the baseline, illustrating a more streamlined reporting process.",
+    "At least one quantitative linkage between trust/resilience metrics and financial KPIs is computed (e.g., non-null trust_to_financial_correlation_strength), demonstrating the mechanical connection rather than asserting any particular strength."
+  ],
+  "failure_modes": [
+    "Data integration failures where synthetic sentiment, incident, and financial tables cannot be joined consistently due to schema mismatch or time index misalignment.",
+    "Metric definitions that depend on data not present in the shared input set, leading to missing or non-computable metrics and gaps in the catalog.",
+    "Inconsistent or ambiguous incident timestamps (e.g., missing detection time), preventing reliable computation of TTD, TTR, or recovery metrics.",
+    "Overfitting attribution analyses to the synthetic dataset structure, making the framework difficult to apply to real-world, noisier data without significant adaptation.",
+    "Excessive metric proliferation in the treatment condition (too many indicators) that undermines executive interpretability, even if technically computable.",
+    "Dashboard performance or refresh issues (e.g., long dashboard_refresh_latency) that make the treatment system impractical for near-real-time executive monitoring.",
+    "Board reporting templates that cannot be auto-populated reliably from the metric outputs, requiring substantial manual editing and undermining reproducibility.",
+    "Misinterpretation risk if users treat synthetic trust_to_financial_correlation_strength as evidence about their own organization\u2019s causal relationships; this should be mitigated through explicit documentation, but remains a potential misuse."
+  ],
+  "required_environment": {
+    "runtime": [
+      "Python 3.10+ (or later) environment, or an equivalent data analysis stack.",
+      "JupyterLab or Jupyter Notebook for running analysis and dashboard prototyping notebooks.",
+      "Optional: R 4.x environment with tidyverse if R-based examples are used in parallel."
+    ],
+    "libraries": [
+      "pandas for tabular data processing.",
+      "numpy for numerical computations and random data generation.",
+      "matplotlib or seaborn for static visualizations.",
+      "plotly or altair for interactive dashboard components (if implemented in notebooks).",
+      "statsmodels or scikit-learn for simple correlation/regression analyses linking trust metrics to financial KPIs.",
+      "Optional: a lightweight BI-like layer (e.g., Panel, Voila, Streamlit, or similar) if a more app-like dashboard is desired."
+    ],
+    "infrastructure": [
+      "Local machine or cloud notebook environment with at least 4 CPU cores, 8 GB RAM, and sufficient disk space for synthetic datasets (typically < 1 GB).",
+      "Git client and access to the repository at https://github.com/bookauthority/defending-brand-trust-ai-misinformation.",
+      "No external APIs or proprietary data sources are required; all examples should run offline using synthetic or anonymized data bundled in the repo."
+    ],
+    "permissions_and_access": [
+      "Ability to clone the GitHub repository and install Python/R dependencies using pip, conda, or renv as appropriate.",
+      "For organizational deployments with real data, appropriate access controls and data governance must be applied, but these are beyond the scope of the synthetic experiment specification."
+    ]
+  },
+  "run_instructions": [
+    "Clone the repository: `git clone https://github.com/bookauthority/defending-brand-trust-ai-misinformation` and change into the project directory.",
+    "Create and activate a virtual environment (e.g., `python -m venv .venv && source .venv/bin/activate` on Unix-like systems or the Windows equivalent).",
+    "Install dependencies from the provided requirements file (e.g., `pip install -r requirements.txt`) or environment specification.",
+    "Run the synthetic data generation workload via the provided notebook or script (e.g., `notebooks/ch08_generate_synthetic_trust_data.ipynb` or `scripts/ch08_generate_synthetic_trust_data.py`). Verify that sentiment, incident, web/search, and financial tables are created under a known `data/` directory.",
+    "Execute the baseline reporting pipeline notebook (e.g., `notebooks/ch08_baseline_flat_reporting.ipynb`), which should load the synthetic data, compute basic aggregates, and export baseline summary tables and simple visualizations.",
+    "Execute the treatment metric framework and dashboard pipeline notebook (e.g., `notebooks/ch08_treatment_trust_metrics_dashboard.ipynb`), which should: (a) load the same synthetic data, (b) build the metric catalog, (c) compute engineered trust/resilience/incident metrics, (d) perform attribution and linkage analyses, and (e) construct dashboard views.",
+    "Optionally launch an interactive dashboard server if included (e.g., `streamlit run apps/ch08_trust_dashboard.py` or equivalent), and confirm that the key treatment panels render correctly using the synthetic data.",
+    "Run the decision simulation notebook (e.g., `notebooks/ch08_decision_simulation.ipynb`), which will outline a series of executive questions, show how they would be addressed using baseline vs treatment outputs, and record the comparable evaluation metrics (availability, steps, etc.) without inferring any success or behavioral outcomes.",
+    "Review the generated outputs: metric catalog files, aggregated tables, plots, and any HTML/PDF artifacts for executive and board reporting templates to ensure they align with the chapter\u2019s conceptual frameworks.",
+    "Document any deviations from the default environment or pipeline steps in a run log (e.g., `logs/ch08_run_log.md`) to support reproducibility within your organization."
+  ],
+  "evidence_schema": {
+    "description": "Structured representation of data and artifacts produced by the experiment, enabling organizations to evaluate and adapt the trust and resilience measurement system without asserting specific performance outcomes.",
+    "entities": [
+      {
+        "name": "time_series_metric",
+        "fields": {
+          "metric_name": "string",
+          "metric_type": "string (e.g., trust, resilience, incident_performance, financial, linkage)",
+          "indicator_class": "string (e.g., leading, lagging, neutral)",
+          "timestamp": "datetime or period label",
+          "value": "float",
+          "unit": "string (e.g., index points, hours, days, currency)",
+          "segment": "string (optional; e.g., channel, region, audience segment)",
+          "incident_id": "string or null (links to incident entity if applicable)",
+          "condition": "string (e.g., baseline, treatment)"
+        }
+      },
+      {
+        "name": "incident",
+        "fields": {
+          "incident_id": "string",
+          "type": "string (e.g., deepfake_video, synthetic_reviews, fabricated_safety_issue)",
+          "severity": "string or integer scale",
+          "channel": "string",
+          "is_misinformation": "boolean",
+          "alert_time": "datetime",
+          "detection_time": "datetime or null",
+          "classification_time": "datetime or null",
+          "public_statement_time": "datetime or null",
+          "containment_time": "datetime or null",
+          "resolved_time": "datetime or null",
+          "ttd_hours": "float or null",
+          "ttr_hours": "float or null",
+          "containment_duration_hours": "float or null",
+          "total_duration_hours": "float or null"
+        }
+      },
+      {
+        "name": "metric_catalog_entry",
+        "fields": {
+          "metric_name": "string",
+          "business_question": "string",
+          "definition": "string",
+          "formula": "string",
+          "data_sources": "array of strings",
+          "unit": "string",
+          "frequency": "string (e.g., daily, weekly, monthly)",
+          "owner_role": "string",
+          "primary_audience": "string (e.g., exec_team, board, functional_leads)",
+          "indicator_class": "string (leading, lagging, neutral)",
+          "status": "string (e.g., defined, implemented, planned)"
+        }
+      },
+      {
+        "name": "attribution_view",
+        "fields": {
+          "view_id": "string",
+          "incident_id": "string or null",
+          "metric_name": "string",
+          "baseline_window": "string or struct (start_time, end_time)",
+          "comparison_window": "string or struct",
+          "baseline_value": "float or null",
+          "comparison_value": "float or null",
+          "delta_value": "float or null",
+          "delta_percentage": "float or null",
+          "notes": "string (e.g., caveats, confounders)",
+          "method": "string (e.g., pre_post, trend_extrapolation, synthetic_control_placeholder)"
+        }
+      },
+      {
+        "name": "kpi_linkage_result",
+        "fields": {
+          "linkage_id": "string",
+          "trust_metric_name": "string",
+          "financial_metric_name": "string",
+          "analysis_window": "string or struct",
+          "correlation_coefficient": "float or null",
+          "r_squared": "float or null",
+          "model_specification": "string (high-level, e.g., simple_linear_regression)",
+          "notes": "string (limitations, non-causal disclaimers)"
+        }
+      },
+      {
+        "name": "reporting_artifact",
+        "fields": {
+          "artifact_id": "string",
+          "artifact_type": "string (e.g., exec_dashboard_view, board_slide_deck_template, summary_pdf)",
+          "condition": "string (baseline or treatment)",
+          "generation_time": "datetime",
+          "source_notebook_or_script": "string",
+          "included_metrics": "array of metric_names",
+          "intended_audience": "string",
+          "file_path": "string (relative path within repo or environment)"
+        }
+      },
+      {
+        "name": "evaluation_record",
+        "fields": {
+          "evaluation_id": "string",
+          "question_id": "string",
+          "question_text": "string",
+          "condition": "string (baseline or treatment)",
+          "required_metrics": "array of metric_names",
+          "metrics_available_directly": "boolean",
+          "num_data_sources_consulted": "integer",
+          "num_transformation_steps": "integer",
+          "notes": "string (e.g., ambiguities, manual workarounds, missing views)"
+        }
+      }
+    ],
+    "usage_notes": [
+      "The evidence schema captures what was computed and produced (metrics, incidents, linkages, artifacts), not whether it achieved any particular business outcome.",
+      "Organizations replicating the experiment with their own data can extend these entities or add fields for real user feedback, but such extensions lie outside this specification.",
+      "All correlation and linkage fields must be accompanied by clear non-causal disclaimers in documentation to avoid over-interpretation."
+    ]
+  }
+}

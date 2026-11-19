@@ -1,0 +1,12 @@
+# Example team configuration for routing.
+
+teams:
+  comms:
+    chat_channel: comms_incidents
+    ticket_queue: COMMS
+  legal:
+    chat_channel: legal_incidents
+    ticket_queue: LEGAL
+  security:
+    chat_channel: security_incidents
+    ticket_queue: SECURITY

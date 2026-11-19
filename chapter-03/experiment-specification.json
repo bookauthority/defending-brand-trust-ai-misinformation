@@ -1,0 +1,442 @@
+{
+  "experiment_id": "exp-ch03-signals-noise-detection-v1",
+  "hypothesis": "An integrated, multi-channel detection stack that combines simple heuristic rules, an off-the-shelf ML signal (e.g., toxicity/semantic anomaly score), and a lightweight human-override workflow will detect emerging AI-driven misinformation narratives earlier (lower detection latency) and with a better balance of precision and coverage than (a) heuristic-only detection or (b) ML-only detection, when applied to the same synthetic event stream.",
+  "baseline": {
+    "name": "Heuristics-only Monitoring",
+    "description": "A simple rules-based detector that monitors synthetic multi-channel content (simulated social posts, search queries, and owned-channel tickets) and raises alerts when predefined keyword and volume thresholds are crossed. No ML signals or explicit human review; alerts are auto-routed based on static rules.",
+    "detection_logic": [
+      "Keyword match against a small list of configured brand and incident-related terms (e.g., brand name + 'fake', 'leak', 'scandal', 'boycott').",
+      "Volume spike detection: rolling count of matching events in a fixed time window (e.g., 10+ hits in 15 minutes on any single channel) triggers an alert.",
+      "Channel-agnostic: all channels are treated equally; no weighting or differential thresholds."
+    ],
+    "intended_use": "Establishes a naive but business-intuitive monitoring approach that many organizations already approximate with basic social listening and manual alert rules. Serves as a reference point for improvements.",
+    "implementation_notes": [
+      "Implemented as a single notebook or script that ingests a timestamped CSV/JSON event stream and applies keyword and volume thresholds.",
+      "Configuration kept in a separate plain-text or YAML file to be easily adjustable by non-technical users."
+    ]
+  },
+  "treatment": {
+    "name": "Integrated Heuristics + ML + Human Workflow Detection Stack",
+    "description": "A layered detection prototype that ingests the same synthetic multi-channel content but: (1) applies heuristic rules, (2) enriches events with a simple ML-based signal (e.g., toxicity/sentiment/anomaly score from a public model or stubbed local model), and (3) routes suspicious clusters into a basic human triage queue. The system triggers alerts based on combined scores and human confirmations, aiming to surface true emerging misinformation earlier while reducing spurious alerts.",
+    "detection_logic": [
+      "Heuristic layer: same keyword and volume rules as the baseline, but tuned per-channel (e.g., lower thresholds for dark-web-style feed vs. general social).",
+      "ML layer: each event receives a score (0\u20131) representing likelihood of harmful/misleading content (e.g., via a toxicity/sentiment model or stubbed scoring function).",
+      "Fusion logic: events are assigned a composite risk score based on weighted combination of heuristics and ML score; emerging clusters are identified via rolling window aggregation.",
+      "Human-in-the-loop: events or clusters that exceed a 'review' threshold (lower than the 'auto-alert' threshold) are placed into a simple triage view where a human reviewer (simulated via labels in the synthetic dataset) can confirm or dismiss.",
+      "Alerting policy: executive-facing alerts are triggered when (a) composite score exceeds a high threshold OR (b) a human reviewer confirms a cluster as suspicious, even if below the purely numeric threshold."
+    ],
+    "intended_use": "Demonstrates to executives how combining simple rules, available ML capabilities, and structured human workflows can create a more effective detection layer without building custom deep-learning systems.",
+    "implementation_notes": [
+      "Implemented as a second notebook or script that reuses the same input and configuration formats as the baseline, plus an additional scoring module.",
+      "ML scoring can be implemented either via a local, lightweight open-source model or a deterministic stub with configurable scoring heuristics to keep the experiment fully runnable offline.",
+      "Human review is simulated using ground-truth labels provided in the synthetic dataset; the notebook demonstrates how different confirmation behaviors (e.g., fast vs. slow reviewers) would affect latency and precision."
+    ]
+  },
+  "workloads": [
+    {
+      "name": "WL1_Synthetic_SlowBurn_Deepfake_Rumor",
+      "description": "A synthetic event stream simulating a slowly emerging deepfake rumor about a senior executive. The narrative begins in fringe channels (pseudo dark-web forum feed), then leaks into mainstream social and eventually triggers inbound owned-channel queries. This workload tests early-signal detection in low-volume, high-signal environments.",
+      "inputs": {
+        "data_files": [
+          "data/wl1_slowburn_deepfake_events.csv"
+        ],
+        "schema": {
+          "fields": [
+            "event_id: string",
+            "timestamp: ISO-8601 string",
+            "channel: enum['social','search','dark_web','owned']",
+            "source_id: string",
+            "content_text: string",
+            "author_reputation_score: float (0-1, synthetic)",
+            "engagement_count: integer",
+            "is_ground_truth_misinfo: boolean",
+            "misinfo_cluster_id: string|null",
+            "human_label_decision: enum['misinfo','benign','uncertain'] (for simulated reviewer)",
+            "true_narrative_start: boolean (marks first few seeds of the misinformation narrative)"
+          ]
+        },
+        "volume_profile": "Gradual increase from ~10 events/hour to ~300 events/hour over 24 simulated hours, with misinfo cluster representing 5\u201315% of total content.",
+        "channel_distribution": {
+          "phase_1": "Majority dark_web, few social mentions.",
+          "phase_2": "Social dominates; some search queries begin referencing the rumor.",
+          "phase_3": "Owned channels (support tickets, contact forms) receive questions referencing the rumor."
+        }
+      },
+      "execution_instructions": [
+        "Run the baseline heuristic-only notebook against wl1_slowburn_deepfake_events.csv, recording all baseline metrics.",
+        "Run the integrated stack notebook against the same file, using identical time-window and threshold settings where applicable.",
+        "Ensure that both runs are configured to simulate the same executive alert channels (e.g., a 'C-suite alert' flag in outputs) for direct comparability."
+      ]
+    },
+    {
+      "name": "WL2_Synthetic_Flash_Boycott_Campaign",
+      "description": "A synthetic event stream modeling a rapid, coordinated spike of posts calling for a boycott based on a fabricated product-safety incident. The campaign uses a mix of organic-seeming accounts and bot-like behavior to create a sudden volume spike. This workload stresses the system's ability to handle high volume and discriminate between coordinated misinfo and organic chatter.",
+      "inputs": {
+        "data_files": [
+          "data/wl2_flash_boycott_events.csv"
+        ],
+        "schema": {
+          "fields": [
+            "event_id: string",
+            "timestamp: ISO-8601 string",
+            "channel: enum['social','search','owned']",
+            "source_id: string",
+            "content_text: string",
+            "author_reputation_score: float (0-1, synthetic)",
+            "engagement_count: integer",
+            "bot_likelihood_score: float (0-1, synthetic)",
+            "is_ground_truth_misinfo: boolean",
+            "misinfo_cluster_id: string|null",
+            "human_label_decision: enum['misinfo','benign','uncertain']"
+          ]
+        },
+        "volume_profile": "Abrupt spike from ~50 events/hour to >5,000 events/hour within a 2-hour window, decaying back to ~200 events/hour over the next 6 hours.",
+        "channel_distribution": {
+          "initial_spike": "Primarily social posts including coordinated hashtags.",
+          "follow_on": "Increase in search queries plus inbound owned-channel contacts referencing 'reports' of the fabricated incident."
+        }
+      },
+      "execution_instructions": [
+        "Run both baseline and integrated detection notebooks on wl2_flash_boycott_events.csv.",
+        "Compare alerting behavior particularly in the early 2-hour spike window.",
+        "Optionally, vary thresholds in configuration files to demonstrate sensitivity of both approaches."
+      ]
+    },
+    {
+      "name": "WL3_Synthetic_Background_Chatter_With_No_Incident",
+      "description": "A synthetic 'day in the life' background dataset with normal brand mentions, customer complaints, marketing-related buzz, and generic news coverage\u2014but no true misinformation incident. This workload evaluates false-positive behavior and alert noise under realistic baseline conditions.",
+      "inputs": {
+        "data_files": [
+          "data/wl3_background_chatter_events.csv"
+        ],
+        "schema": {
+          "fields": [
+            "event_id: string",
+            "timestamp: ISO-8601 string",
+            "channel: enum['social','search','owned']",
+            "source_id: string",
+            "content_text: string",
+            "author_reputation_score: float (0-1, synthetic)",
+            "engagement_count: integer",
+            "is_ground_truth_misinfo: boolean (always false)",
+            "misinfo_cluster_id: string|null",
+            "human_label_decision: enum['benign']"
+          ]
+        },
+        "volume_profile": "Stable range of 200\u2013800 events/hour over 24 simulated hours across all channels.",
+        "channel_distribution": {
+          "approximate": "70% social, 20% search, 10% owned channels."
+        }
+      },
+      "execution_instructions": [
+        "Run the baseline heuristic-only notebook on wl3_background_chatter_events.csv and record the number and characteristics of alerts.",
+        "Run the integrated stack notebook on the same file, using thresholds chosen for WL1 and WL2, without further tuning.",
+        "Evaluate the rate and nature of false alerts (alerts with no corresponding ground-truth misinfo)."
+      ]
+    }
+  ],
+  "controls": {
+    "shared_configuration": [
+      "Use the same input datasets (identical files) for baseline and treatment for each workload.",
+      "Use a consistent time-window size for volume aggregation (e.g., 15-minute windows) across both conditions.",
+      "Keep keyword lists, brand terms, and initial thresholds identical at the start of each comparison run; any tuning should be documented and applied symmetrically where possible.",
+      "Run both baseline and integrated prototypes in the same runtime environment (Python version, library versions) to avoid performance or compatibility confounders."
+    ],
+    "randomness_and_seeding": [
+      "If the ML scoring component uses any stochastic behavior (e.g., probabilistic sampling), fix a random seed and record it in configuration.",
+      "All simulations of human-review timing should use deterministic durations for the primary experiment; any stochastic human-behavior simulations should be clearly demarcated as exploratory."
+    ],
+    "observer_blindness": [
+      "When feasible, reviewers evaluating the outputs (e.g., alert logs) should not be informed whether a given run is baseline or treatment when assessing business usefulness of alerts.",
+      "Output files should be anonymized as 'Run A' and 'Run B' per workload for subjective assessments."
+    ],
+    "execution_order": [
+      "To avoid order effects, alternate whether the baseline or treatment is run first for a given workload when multiple teams or sessions are conducted.",
+      "For a single-user run-through, document the order of execution; for reproducibility, scripts should default to baseline-first but allow override."
+    ]
+  },
+  "metrics": [
+    {
+      "name": "time_to_first_true_alert_minutes",
+      "unit": "minutes",
+      "description": "Elapsed simulated time between the first ground-truth misinformation event (true_narrative_start == true or first is_ground_truth_misinfo == true) and the first alert that correctly corresponds to that misinfo cluster."
+    },
+    {
+      "name": "time_to_reliable_detection_minutes",
+      "unit": "minutes",
+      "description": "Elapsed simulated time between the first ground-truth misinfo event and the point where cumulative precision for alerts on that cluster exceeds a configurable threshold (e.g., 0.7), indicating reliable detection rather than a one-off lucky alert."
+    },
+    {
+      "name": "alert_precision",
+      "unit": "ratio",
+      "description": "Number of alerts that correspond to true misinformation clusters divided by total alerts generated over the evaluation window."
+    },
+    {
+      "name": "alert_recall_cluster_level",
+      "unit": "ratio",
+      "description": "Number of distinct ground-truth misinformation clusters that generated at least one alert divided by total number of ground-truth clusters in the workload."
+    },
+    {
+      "name": "executive_alert_volume_per_24h",
+      "unit": "count_per_24h",
+      "description": "Total number of alerts that meet the criteria for C-suite/executive routing within a 24-hour simulated period."
+    },
+    {
+      "name": "reviewer_load_events_per_reviewer_hour",
+      "unit": "events_per_hour",
+      "description": "Number of events or clusters routed to human reviewers divided by total (simulated) reviewer hours in the scenario, indicating operational workload for human intelligence."
+    },
+    {
+      "name": "estimated_detection_cost_index",
+      "unit": "dimensionless_cost_index",
+      "description": "A composite index approximating detection cost, based on a weighted combination of computational complexity (e.g., events processed x relative compute weight), number of human review actions, and alert volume routed to high-attention channels. Designed to be comparable across baseline and treatment as a directional cost metric rather than a monetary value."
+    },
+    {
+      "name": "coverage_by_channel",
+      "unit": "ratio_per_channel",
+      "description": "For each channel (social, search, dark_web, owned), the ratio of ground-truth misinformation events that are associated with at least one detected alert."
+    },
+    {
+      "name": "mean_false_alerts_per_24h",
+      "unit": "count_per_24h",
+      "description": "Average number of alerts over a 24-hour window that do not correspond to any ground-truth misinformation cluster (i.e., pure noise)."
+    },
+    {
+      "name": "latency_distribution_percentiles",
+      "unit": "minutes",
+      "description": "Key percentiles (e.g., 25th, 50th, 75th) of the distribution of times between ground-truth misinformation event occurrence and first related alert, computed per cluster and then aggregated."
+    }
+  ],
+  "success_criteria": {
+    "primary": [
+      "For WL1_Synthetic_SlowBurn_Deepfake_Rumor, the integrated treatment reduces time_to_first_true_alert_minutes by at least 20% compared to baseline, without more than a 25% increase in mean_false_alerts_per_24h.",
+      "For WL2_Synthetic_Flash_Boycott_Campaign, the integrated treatment achieves equal or better alert_precision (within \u00b10.05 absolute) compared to baseline while reducing executive_alert_volume_per_24h by at least 20%, indicating better prioritization.",
+      "Across WL1 and WL2 combined, the integrated treatment improves alert_recall_cluster_level by at least 10 percentage points relative to baseline."
+    ],
+    "secondary": [
+      "For WL3_Synthetic_Background_Chatter_With_No_Incident, the integrated treatment produces fewer or equal executive_alert_volume_per_24h and mean_false_alerts_per_24h than the baseline, demonstrating that added sophistication does not make background noise worse.",
+      "The estimated_detection_cost_index for the integrated treatment remains within 1.5x of the baseline cost index for each workload, providing an acceptable trade-off between improved detection and operational cost.",
+      "coverage_by_channel for dark_web and owned channels improves under the integrated treatment by at least 10 percentage points relative to baseline in WL1 and WL2, highlighting better visibility in non-obvious channels."
+    ],
+    "interpretation_for_executives": [
+      "If the integrated stack shows earlier and more reliable detection with manageable alert and reviewer loads, it suggests that executives should prioritize layered detection investments (rules + ML + human workflows) rather than relying solely on keyword/volume monitoring.",
+      "If improvements are marginal or costs appear disproportionate, executives can use the metrics to scope smaller, targeted enhancements (e.g., adding human review only for high-risk channels) before committing to full-stack changes."
+    ]
+  },
+  "failure_modes": [
+    {
+      "name": "Overfitting_Thresholds_To_Synthetic_Data",
+      "description": "Tuning thresholds aggressively on the provided synthetic workloads may yield unrealistically strong performance that does not generalize to real-world data, giving executives a false sense of confidence.",
+      "mitigations": [
+        "Provide default threshold configurations with minimal tuning and clearly label any hyper-optimized settings as 'demo only'.",
+        "Encourage users to apply the same configuration to multiple, distinct synthetic workloads (WL1\u2013WL3) and note performance variability."
+      ]
+    },
+    {
+      "name": "Misinterpreting_Synthetic_Timelines_As_Real_Time",
+      "description": "Readers might confuse simulated time with actual wall-clock time and draw incorrect conclusions about how quickly real-world detection would occur.",
+      "mitigations": [
+        "Clearly annotate in notebooks that timestamps are simulated and explain how to scale the interpretation (e.g., what a 30-minute simulated latency might mean in practice).",
+        "Include commentary on operational constraints (API rate limits, human staffing) that can increase real-world latency."
+      ]
+    },
+    {
+      "name": "Unstable_ML_Scoring_Due_To_External_APIs",
+      "description": "If ML scoring relies on external APIs, rate limits, network issues, or model changes could alter results over time or make the experiments non-reproducible.",
+      "mitigations": [
+        "Default to a local, deterministic scoring stub for the core experiment, optionally providing external API integrations as clearly marked extensions.",
+        "Version-control both local models and scoring logic; record model/version identifiers in experiment metadata."
+      ]
+    },
+    {
+      "name": "Human_Review_Simulation_Not_Reflecting_Reality",
+      "description": "Simulated human reviewer behavior (e.g., immediate decisions, perfect labeling) may not reflect real-world delays, errors, and disagreements, biasing latency and precision results in favor of human-in-the-loop designs.",
+      "mitigations": [
+        "Provide adjustable parameters for reviewer delay and error rates; encourage users to explore more realistic settings.",
+        "Document that base runs use 'idealized' human performance and include separate scenarios with more conservative assumptions."
+      ]
+    },
+    {
+      "name": "Metric_Misinterpretation_By_Non_Technical_Users",
+      "description": "Executives may misinterpret metrics like precision/recall or cost indices, leading to incorrect decisions (e.g., over-valuing coverage at the expense of unmanageable alert volumes).",
+      "mitigations": [
+        "Include a brief, executive-readable glossary in the repository explaining each metric and common tradeoffs.",
+        "Provide pre-built dashboard cells or views that relate metrics back to business concepts (e.g., 'alerts per executive per day')."
+      ]
+    },
+    {
+      "name": "Dataset_Leakage_Between_Configuration_And_Evaluation",
+      "description": "Using workload-specific knowledge (e.g., knowing exactly which keywords appear in misinfo content) to design rules may result in unrealistically high performance.",
+      "mitigations": [
+        "Offer a default keyword list that is not perfectly aligned with each misinfo narrative, reflecting real-world uncertainty.",
+        "Encourage users to define configuration before inspecting ground-truth labels; document when and how any post-hoc tuning is done."
+      ]
+    }
+  ],
+  "required_environment": {
+    "runtime": "Python 3.10+",
+    "recommended_libraries": [
+      "pandas >= 2.0.0",
+      "numpy >= 1.24.0",
+      "matplotlib >= 3.7.0 or plotly >= 5.0.0 (for dashboards/visualizations)",
+      "scikit-learn >= 1.3.0 (for simple ML scoring or evaluation utilities)",
+      "jupyterlab >= 4.0.0 or classic notebook >= 6.5.0"
+    ],
+    "optional_libraries": [
+      "textblob or similar (for basic sentiment analysis, if desired)",
+      "fastapi or flask (only if building a live alerting prototype API, not required for core experiments)"
+    ],
+    "hardware_requirements": [
+      "Any modern laptop or cloud instance with at least 4 GB RAM.",
+      "No GPU is required; all ML can be run on CPU with small models or stub scoring."
+    ],
+    "repository_structure_expectations": [
+      "notebooks/ch03_baseline_heuristics.ipynb",
+      "notebooks/ch03_integrated_stack.ipynb",
+      "data/wl1_slowburn_deepfake_events.csv",
+      "data/wl2_flash_boycott_events.csv",
+      "data/wl3_background_chatter_events.csv",
+      "config/ch03_detection_config.yaml",
+      "docs/ch03_metrics_and_interpretation.md"
+    ],
+    "setup_instructions": [
+      "Clone the repository: git clone https://github.com/bookauthority/defending-brand-trust-ai-misinformation.git",
+      "Change directory: cd defending-brand-trust-ai-misinformation",
+      "Create and activate a virtual environment (e.g., python -m venv .venv && source .venv/bin/activate on Unix/macOS or .venv\\\\Scripts\\\\activate on Windows).",
+      "Install dependencies: pip install -r requirements.txt (or run a provided setup script).",
+      "Launch Jupyter: jupyter lab or jupyter notebook, then open the chapter 3 notebooks under notebooks/."
+    ]
+  },
+  "run_instructions": [
+    "Step 1: Environment Preparation",
+    "1.1 Follow the setup_instructions under required_environment to install dependencies and launch Jupyter.",
+    "1.2 Verify that the data/ directory contains wl1_slowburn_deepfake_events.csv, wl2_flash_boycott_events.csv, and wl3_background_chatter_events.csv.",
+    "",
+    "Step 2: Configure Detection Parameters",
+    "2.1 Open config/ch03_detection_config.yaml and review default settings, including:",
+    "    - keyword_list: list of brand and incident terms.",
+    "    - volume_thresholds: counts per 15-minute window per channel.",
+    "    - ml_score_thresholds: thresholds for 'review' vs. 'auto-alert'.",
+    "    - human_review_delay_minutes: simulated human response time.",
+    "2.2 For the main experiment, keep defaults unchanged to allow reproducible comparison with documented results.",
+    "",
+    "Step 3: Run Baseline (Heuristics-Only) for Each Workload",
+    "3.1 Open notebooks/ch03_baseline_heuristics.ipynb.",
+    "3.2 In the notebook, set the workload parameter to 'WL1' and input path to data/wl1_slowburn_deepfake_events.csv.",
+    "3.3 Execute the notebook cells sequentially to:",
+    "    - Load the dataset.",
+    "    - Apply heuristic rules to generate alerts.",
+    "    - Compute metrics defined in the metrics section.",
+    "    - Save results to outputs/baseline_wl1_results.json (or similar).",
+    "3.4 Repeat steps 3.2\u20133.3 for 'WL2' (data/wl2_flash_boycott_events.csv) and 'WL3' (data/wl3_background_chatter_events.csv), saving outputs to separate files.",
+    "",
+    "Step 4: Run Treatment (Integrated Stack) for Each Workload",
+    "4.1 Open notebooks/ch03_integrated_stack.ipynb.",
+    "4.2 Ensure that it is referencing the same config/ch03_detection_config.yaml file.",
+    "4.3 Set the workload parameter to 'WL1' and input path to data/wl1_slowburn_deepfake_events.csv.",
+    "4.4 Execute the notebook cells sequentially to:",
+    "    - Load the dataset.",
+    "    - Apply heuristic rules plus ML scoring to compute composite risk scores.",
+    "    - Simulate routing of selected events/clusters to human review and update decisions.",
+    "    - Generate alerts based on combined logic.",
+    "    - Compute metrics and save to outputs/integrated_wl1_results.json.",
+    "4.5 Repeat for 'WL2' and 'WL3', saving outputs to integrated_wl2_results.json and integrated_wl3_results.json respectively.",
+    "",
+    "Step 5: Compare Baseline and Treatment",
+    "5.1 Use a comparison cell or a separate notebook (e.g., notebooks/ch03_compare_results.ipynb) to load pairs of results files (baseline vs. integrated) per workload.",
+    "5.2 For each workload, compute deltas for:",
+    "    - time_to_first_true_alert_minutes",
+    "    - time_to_reliable_detection_minutes",
+    "    - alert_precision",
+    "    - alert_recall_cluster_level",
+    "    - executive_alert_volume_per_24h",
+    "    - mean_false_alerts_per_24h",
+    "    - estimated_detection_cost_index",
+    "5.3 Visualize results via bar charts or tables that clearly label baseline vs. integrated performance.",
+    "5.4 Optionally, generate simple executive-ready views (e.g., 'Under the integrated stack, you would have seen this rumor X minutes earlier with Y fewer/noise alerts.').",
+    "",
+    "Step 6: Sensitivity and Scenario Exploration (Optional)",
+    "6.1 Adjust thresholds and keyword lists in config/ch03_detection_config.yaml to simulate different risk appetites (e.g., more sensitive vs. more conservative detection).",
+    "6.2 Re-run selected workloads under both baseline and integrated conditions with the new configuration, saving results with versioned filenames.",
+    "6.3 Document how changes affect metrics such as precision, recall, and executive alert volume; use these insights as discussion prompts for leadership tradeoffs.",
+    "",
+    "Step 7: Document Findings",
+    "7.1 Populate a simple template (e.g., docs/ch03_executive_summary_template.md) with:",
+    "    - Key metric comparisons per workload.",
+    "    - Observed tradeoffs between coverage, latency, precision, and cost.",
+    "    - Implications for your organization's preferred detection stack design (build, buy, or partner).",
+    "7.2 Save this summary for use in executive team or board briefings."
+  ],
+  "evidence_schema": {
+    "run_metadata": {
+      "fields": [
+        "experiment_id: string (e.g., 'exp-ch03-signals-noise-detection-v1')",
+        "run_id: string (unique identifier per execution, e.g., UUID)",
+        "timestamp_utc: ISO-8601 string",
+        "executor: string (person, role, or 'automated')",
+        "workload_name: string (e.g., 'WL1_Synthetic_SlowBurn_Deepfake_Rumor')",
+        "condition: enum['baseline','integrated']",
+        "code_version: string (git commit hash or tag)",
+        "config_version: string (hash or filename of YAML configuration)",
+        "random_seed: integer|null",
+        "notes: string|null"
+      ]
+    },
+    "per_run_metrics": {
+      "fields": [
+        "run_id: string (foreign key to run_metadata.run_id)",
+        "time_to_first_true_alert_minutes: float|null",
+        "time_to_reliable_detection_minutes: float|null",
+        "alert_precision: float|null",
+        "alert_recall_cluster_level: float|null",
+        "executive_alert_volume_per_24h: float|null",
+        "reviewer_load_events_per_reviewer_hour: float|null",
+        "estimated_detection_cost_index: float|null",
+        "coverage_by_channel: object (keys: channel names; values: float ratios)",
+        "mean_false_alerts_per_24h: float|null",
+        "latency_distribution_percentiles: object (keys: 'p25','p50','p75'; values: float minutes)"
+      ]
+    },
+    "alert_log": {
+      "fields": [
+        "alert_id: string",
+        "run_id: string (foreign key to run_metadata.run_id)",
+        "timestamp: ISO-8601 string (simulated event time at which alert fired)",
+        "related_event_ids: array of strings",
+        "channel: enum['social','search','dark_web','owned','multi']",
+        "is_true_misinfo_alert: boolean (based on ground_truth linkage)",
+        "misinfo_cluster_id: string|null",
+        "alert_severity: enum['info','review','executive']",
+        "composite_risk_score: float|null",
+        "trigger_type: enum['heuristic','ml','fusion','human_confirmation']"
+      ]
+    },
+    "review_log": {
+      "fields": [
+        "review_id: string",
+        "run_id: string",
+        "event_or_cluster_id: string",
+        "simulated_reviewer_decision: enum['misinfo','benign','uncertain']",
+        "decision_timestamp: ISO-8601 string (simulated)",
+        "decision_latency_minutes: float",
+        "used_in_alerting: boolean"
+      ]
+    },
+    "comparison_summary": {
+      "fields": [
+        "comparison_id: string",
+        "workload_name: string",
+        "baseline_run_id: string",
+        "integrated_run_id: string",
+        "delta_time_to_first_true_alert_minutes: float|null (baseline - integrated)",
+        "delta_time_to_reliable_detection_minutes: float|null (baseline - integrated)",
+        "delta_alert_precision: float|null (integrated - baseline)",
+        "delta_alert_recall_cluster_level: float|null (integrated - baseline)",
+        "delta_executive_alert_volume_per_24h: float|null (integrated - baseline)",
+        "delta_mean_false_alerts_per_24h: float|null (integrated - baseline)",
+        "delta_estimated_detection_cost_index: float|null (integrated - baseline)",
+        "interpretive_notes: string|null (brief narrative on tradeoffs observed)"
+      ]
+    }
+  }
+}

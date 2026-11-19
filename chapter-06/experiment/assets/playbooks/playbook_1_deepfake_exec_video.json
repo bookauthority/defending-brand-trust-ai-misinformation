@@ -1,0 +1,25 @@
+{
+  "scenario_id": "scenario-deepfake-exec-video-v1",
+  "triggers": {
+    "min_events_for_investigation": 1,
+    "investigation_max_delay_minutes": 5,
+    "public_response_max_delay_minutes": 20
+  },
+  "modules": [
+    {
+      "id": "investigation",
+      "description": "Verify authenticity of executive video with security and IT.",
+      "roles": ["security", "comms"]
+    },
+    {
+      "id": "public_response",
+      "description": "Issue holding statement to investors and employees.",
+      "roles": ["comms", "legal"]
+    },
+    {
+      "id": "channel_coverage",
+      "description": "Coordinate messaging across social, messaging apps, internal tools, and news.",
+      "roles": ["comms"]
+    }
+  ]
+}

@@ -1,0 +1,397 @@
+{
+  "experiment_id": "exp-ch11-technical-toolkit-integrations-v1",
+  "hypothesis": "Implementing a structured, minimally engineered integration pattern for AI-misinformation monitoring (via APIs and webhooks) into existing incident workflows will enable non-engineering leaders and their teams to achieve (a) faster, more reliable alert delivery into ticketing/chat systems and (b) clearer ownership handoffs to security and data science, compared with an ad-hoc, manual export-import approach.",
+  "baseline": {
+    "description": "Ad-hoc, manual handling of AI-misinformation monitoring signals where non-technical teams periodically export alerts from a monitoring tool (or receive them by email), manually triage them in spreadsheets, and copy-paste high-priority items into chat and ticketing tools.",
+    "implementation_outline": [
+      "Monitoring tool (simulated via a Python script) writes JSON alert files to disk or emails a CSV export.",
+      "A non-technical operator (simulated script) reads the export once per fixed interval (e.g., every 10 minutes).",
+      "Operator filters alerts based on simple rules (e.g., severity >= 3, channel in ['twitter','tiktok']).",
+      "Operator posts selected alerts to a chat channel (simulated via stdout or a mock HTTP endpoint) and creates incident tickets by writing to a 'tickets' JSON log.",
+      "No automatic linkage between alerts and tickets; correlation is done manually using IDs in spreadsheets."
+    ],
+    "intended_learning": "Characterize the friction, latency, and error risks when leaders rely on manual, non-integrated workflows for AI-misinformation alert handling."
+  },
+  "treatment": {
+    "description": "Lightweight, script-based technical toolkit where AI-misinformation alerts are pushed via a webhook from a mock monitoring service into an integration layer that automatically routes them to a mock chat system and a mock incident/ticketing system, using a clear, human-readable configuration and non-technical specification.",
+    "implementation_outline": [
+      "Mock monitoring service exposes an HTTP endpoint '/emit_alerts' that simulates AI-misinformation alerts and posts them to a webhook URL.",
+      "Integration service exposes '/webhook/alerts' that receives alerts, validates payloads against a documented schema, enriches them (e.g., maps to playbook type), and applies routing rules defined in a YAML or JSON config readable by non-engineers.",
+      "Integration service posts formatted alert summaries to a mock chat endpoint '/chat/post_message' and creates or updates incidents via '/tickets/create' and '/tickets/update'.",
+      "A simple, non-technical spec file (markdown) describes: inputs (alert fields), routing rules, SLAs, ownership, and failure behaviors; code is structured so non-engineers can adjust configurations without editing logic.",
+      "Logs and correlation IDs are automatically maintained across alerts, chat posts, and tickets, providing traceability for postmortems and pilots."
+    ],
+    "intended_learning": "Demonstrate how a simple, well-specified integration pattern with APIs and webhooks can materially reduce latency, ambiguity, and coordination failure in AI-misinformation handling, while remaining understandable and governable by non-engineers."
+  },
+  "workloads": [
+    {
+      "name": "workload-1-single-stream-medium-volume",
+      "description": "Simulated steady stream of medium-volume AI-misinformation alerts (e.g., 100 alerts over 30 minutes) representing social content spikes about a brand, delivered first through the baseline pipeline and then through the treatment pipeline.",
+      "input_profile": {
+        "alert_count": 100,
+        "duration_minutes": 30,
+        "channels": [
+          "twitter",
+          "tiktok",
+          "news"
+        ],
+        "severity_distribution": {
+          "1": 0.3,
+          "2": 0.3,
+          "3": 0.25,
+          "4": 0.1,
+          "5": 0.05
+        },
+        "fields_per_alert": [
+          "alert_id",
+          "timestamp_detected",
+          "source_channel",
+          "suspected_attack_type",
+          "severity_score",
+          "confidence_score",
+          "summary_text",
+          "url",
+          "language"
+        ]
+      },
+      "steps_baseline": [
+        "Generate synthetic alerts and write them as JSON lines to 'data/baseline/alerts_stream.jsonl'.",
+        "Every 10 minutes, run a script that reads all new alerts since the last run.",
+        "Filter alerts with severity_score >= 3.",
+        "Write filtered alerts to 'data/baseline/triage_sheet.csv' as a stand-in for a manual spreadsheet.",
+        "Simulate a human operator creating tickets and chat messages by running a script that reads 'triage_sheet.csv' and appends entries to 'logs/baseline_tickets.jsonl' and 'logs/baseline_chat.jsonl'.",
+        "Record timestamps for each stage to compute end-to-end latency and coverage."
+      ],
+      "steps_treatment": [
+        "Start the mock chat, ticketing, and integration services.",
+        "Configure the monitoring simulator to POST each generated alert directly to the integration webhook '/webhook/alerts' as it is generated.",
+        "Integration service validates payloads, applies routing rules (e.g., severity >= 3 routed to both chat and tickets), and posts messages to '/chat/post_message' and '/tickets/create'.",
+        "All events are logged to 'logs/treatment_events.jsonl' with correlation IDs linking alert, chat post, and ticket.",
+        "Record timestamps at receipt, routing, and downstream delivery to compute end-to-end latency and coverage."
+      ]
+    },
+    {
+      "name": "workload-2-multi-stream-incident-spike",
+      "description": "Simulate a sudden spike of high-severity alerts across multiple channels (e.g., a deepfake executive video and coordinated narrative spread), testing how baseline and treatment workflows handle peak load and cross-team handoffs.",
+      "input_profile": {
+        "alert_count": 60,
+        "duration_minutes": 5,
+        "channels": [
+          "twitter",
+          "tiktok",
+          "youtube",
+          "internal_tipline"
+        ],
+        "scenario_tags": [
+          "deepfake_executive_video",
+          "market_manipulation_rumor"
+        ],
+        "severity_distribution": {
+          "1": 0.05,
+          "2": 0.15,
+          "3": 0.25,
+          "4": 0.3,
+          "5": 0.25
+        },
+        "fields_per_alert": [
+          "alert_id",
+          "timestamp_detected",
+          "source_channel",
+          "scenario_tag",
+          "suspected_attack_type",
+          "severity_score",
+          "confidence_score",
+          "impacted_asset",
+          "summary_text",
+          "url"
+        ]
+      },
+      "steps_baseline": [
+        "Generate synthetic spike alerts and write them to 'data/baseline/spike_alerts.jsonl' over a compressed 5-minute timeline.",
+        "Simulate a manual export event triggered at minute 5.",
+        "Manual triage script filters alerts with severity_score >= 4 or scenario_tag in ['deepfake_executive_video', 'market_manipulation_rumor'] and writes them to 'data/baseline/spike_triage.csv'.",
+        "Simulate a human manually categorizing which team should own each item (e.g., comms, legal, security) using simplistic mapping rules in the script, and log results to 'logs/baseline_spike_team_assignments.jsonl'.",
+        "Simulate delayed ticket creation and chat posting with fixed manual delays (e.g., 5\u201315 minutes) added, then record final times and assignments."
+      ],
+      "steps_treatment": [
+        "Start all mock services as in workload-1.",
+        "Monitoring simulator sends alerts in near real-time to integration webhook.",
+        "Integration layer uses configuration mapping (e.g., scenario_tag + severity_score) to automatically determine primary and secondary owning teams and routes alerts to team-specific chat channels and ticket queues.",
+        "Record times from first high-severity alert receipt to: first ticket created, first message in each relevant team channel, and first 'incident_opened' event in tickets.",
+        "Output correlation logs to 'logs/treatment_spike_events.jsonl' for analysis of routing accuracy and speed."
+      ]
+    },
+    {
+      "name": "workload-3-failure-and-retry-scenarios",
+      "description": "Evaluate resilience and observability differences between baseline and treatment when common integration failures occur (e.g., chat endpoint unavailable, ticketing API returns errors, malformed alert payloads).",
+      "input_profile": {
+        "alert_count": 40,
+        "duration_minutes": 10,
+        "failure_scenarios": [
+          "chat_endpoint_down_for_3_minutes",
+          "ticketing_api_returns_500_for_20_percent_of_requests",
+          "alerts_with_missing_required_fields"
+        ]
+      },
+      "steps_baseline": [
+        "Generate synthetic alerts and a CSV export as usual.",
+        "Simulate operator attempting to paste alerts into a chat tool that is 'unavailable' (represented by the script dropping messages for 3 minutes and logging errors to 'logs/baseline_failures_chat.txt').",
+        "Simulate manual re-tries with a fixed probability (e.g., only 50% of failed posts are retried).",
+        "Simulate ticket creation failures as missed entries in 'logs/baseline_tickets.jsonl' due to lack of validation and unclear error reporting.",
+        "Manually count unrecovered failures and approximate detection of data quality issues (e.g., missing fields) by scanning the logs."
+      ],
+      "steps_treatment": [
+        "Enable failure injection in mock chat and ticketing services according to the defined scenarios.",
+        "Run integration pipeline as in previous workloads.",
+        "Integration layer implements automatic retries with backoff, validation of incoming alerts, and error logging to 'logs/treatment_errors.jsonl'.",
+        "Measure fraction of alerts successfully delivered after retries, mean retry duration, and how many malformed alerts are rejected versus quarantined with error details.",
+        "Optionally, emit summary metrics to a simple console or JSON file for inspection."
+      ]
+    }
+  ],
+  "controls": {
+    "data_generation": "Use the same synthetic alert generation scripts and random seeds for both baseline and treatment runs for each workload, ensuring identical input alert streams.",
+    "environment": "Run baseline and treatment on the same machine type and operating system, with the same Python version and library dependencies as specified in the repository (e.g., Python 3.11, identical requirements.txt).",
+    "timing": "For each workload, run baseline and treatment back-to-back under similar system load conditions. Do not run other heavy processes concurrently.",
+    "configuration": "Use a shared configuration file to define common concepts (severity thresholds, scenario tags, team names) so that logical routing rules are materially equivalent between baseline and treatment.",
+    "logging_format": "Standardize timestamps (ISO 8601 UTC), IDs, and field names across baseline and treatment logs to ensure comparability.",
+    "run_order": "Alternate starting condition across repeated trials (e.g., baseline-first on trial 1, treatment-first on trial 2) to mitigate any warm-cache or transient system effects if multiple iterations are run."
+  },
+  "metrics": [
+    {
+      "name": "end_to_end_alert_to_ticket_latency",
+      "description": "Time from initial detection timestamp of an alert to the creation timestamp of the corresponding incident/ticket entry.",
+      "unit": "seconds"
+    },
+    {
+      "name": "end_to_end_alert_to_chat_latency",
+      "description": "Time from initial detection timestamp of an alert to posting timestamp in the relevant chat channel.",
+      "unit": "seconds"
+    },
+    {
+      "name": "alert_routing_coverage",
+      "description": "Proportion of alerts that meet routing criteria (e.g., severity >= 3) and successfully appear as tickets and/or chat entries.",
+      "unit": "fraction"
+    },
+    {
+      "name": "routing_accuracy",
+      "description": "Proportion of routed alerts that are assigned to the correct owning team(s) according to a predefined ground-truth mapping derived from scenario tags and severity.",
+      "unit": "fraction"
+    },
+    {
+      "name": "operator_touch_points",
+      "description": "Estimated number of manual human interaction steps required to move an alert from detection to ticket creation and chat notification (e.g., export, copy-paste, manual classification). For this experiment, this is approximated by counting scripted manual-analog steps.",
+      "unit": "count_per_alert_or_per_100_alerts"
+    },
+    {
+      "name": "unrecovered_delivery_failures",
+      "description": "Number of alerts that should have been routed but were not successfully delivered to chat or ticketing endpoints after all retries and manual efforts.",
+      "unit": "count"
+    },
+    {
+      "name": "error_detection_rate",
+      "description": "Proportion of malformed or incomplete alerts that are detected and logged as errors (with sufficient detail) versus silently dropped or misprocessed.",
+      "unit": "fraction"
+    },
+    {
+      "name": "configuration_complexity",
+      "description": "Relative complexity of integration logic expressed as the number of configuration lines (YAML/JSON) and distinct routing rules that non-engineers would need to understand or modify.",
+      "unit": "config_lines_and_rule_count"
+    }
+  ],
+  "success_criteria": {
+    "primary": [
+      {
+        "criterion": "Latency improvement",
+        "description": "For workloads 1 and 2, the median end_to_end_alert_to_ticket_latency and end_to_end_alert_to_chat_latency in the treatment should be at least 50% lower than in the baseline.",
+        "threshold": {
+          "min_relative_improvement_fraction": 0.5
+        }
+      },
+      {
+        "criterion": "Coverage and routing accuracy",
+        "description": "For workloads 1 and 2, the treatment should achieve alert_routing_coverage >= 0.95 and routing_accuracy >= 0.9 for alerts that meet routing criteria, and both metrics should be strictly higher than baseline.",
+        "threshold": {
+          "min_coverage": 0.95,
+          "min_accuracy": 0.9
+        }
+      }
+    ],
+    "secondary": [
+      {
+        "criterion": "Resilience to failures",
+        "description": "In workload 3, the treatment should have at least 50% fewer unrecovered_delivery_failures compared with baseline, and an error_detection_rate >= 0.95 for deliberately malformed alerts.",
+        "threshold": {
+          "min_relative_reduction_unrecovered_failures_fraction": 0.5,
+          "min_error_detection_rate": 0.95
+        }
+      },
+      {
+        "criterion": "Manual effort reduction",
+        "description": "Treatment should reduce operator_touch_points by at least 60% per 100 alerts compared with baseline while keeping configuration_complexity within a small, reviewable range (e.g., <= 150 config lines and <= 15 distinct routing rules).",
+        "threshold": {
+          "min_relative_reduction_touch_points_fraction": 0.6,
+          "max_config_lines": 150,
+          "max_routing_rules": 15
+        }
+      }
+    ],
+    "interpretation_notes": "Meeting primary criteria indicates that a simple, well-specified integration pattern is operationally superior to manual workflows for non-engineering-led AI-misinformation defense. Secondary criteria help assess sustainability and manageability for executives and cross-functional teams."
+  },
+  "failure_modes": [
+    {
+      "name": "configuration_drift_or_misconfiguration",
+      "description": "Non-engineers modify routing configurations (e.g., YAML rules) without sufficient validation, causing alerts to be misrouted or dropped.",
+      "mitigations": [
+        "Provide schema validation and configuration checks in the integration service that fail fast with clear errors when config is invalid.",
+        "Include sample configuration files and change-control guidance in the repository, emphasizing non-technical spec review by technical partners.",
+        "Log configuration versions with each routed event for traceability."
+      ]
+    },
+    {
+      "name": "clock_skew_and_timestamp_inconsistency",
+      "description": "System clock differences between services lead to misleading latency measurements or misordered events.",
+      "mitigations": [
+        "Normalize timestamps to UTC and use a single time source for synthetic generation and logging.",
+        "Document this requirement in setup instructions and provide a utility module for timestamp generation."
+      ]
+    },
+    {
+      "name": "environment_dependency_issues",
+      "description": "Inconsistent Python versions, missing dependencies, or port conflicts cause scripts or services to fail.",
+      "mitigations": [
+        "Provide a requirements.txt and optional Dockerfile specifying versions.",
+        "Use environment variable defaults and clearly document configurable ports.",
+        "Offer a health-check script that verifies ability to bind to ports and import dependencies before running full workloads."
+      ]
+    },
+    {
+      "name": "log_correlation_failures",
+      "description": "Correlation IDs are not generated or propagated consistently, making it difficult to match alerts to tickets and chat messages for metric computation.",
+      "mitigations": [
+        "Centralize correlation ID creation at the earliest point (alert generator) and pass it through all downstream systems.",
+        "Add automated tests in the repository to verify presence and consistency of correlation IDs across logs."
+      ]
+    },
+    {
+      "name": "metric_computation_errors",
+      "description": "Analysis notebooks misinterpret logs (e.g., wrong field names, time units) and compute incorrect latency or coverage values.",
+      "mitigations": [
+        "Define a clear evidence_schema (see below) and ensure analysis scripts validate logs against it.",
+        "Include a small, known-good sample dataset with expected metric values for sanity checks."
+      ]
+    }
+  ],
+  "required_environment": {
+    "hardware": "A standard laptop or workstation with at least 4 CPU cores, 8 GB RAM, and 2 GB free disk space. No GPU required.",
+    "software": {
+      "os": "Linux, macOS, or Windows 10+",
+      "runtime": "Python 3.10 or 3.11 (as specified in the repository)",
+      "dependencies": "Installed via 'pip install -r requirements.txt' in the repository root.",
+      "optional": "Docker (if using the containerized setup), Git for cloning the repository."
+    },
+    "network": "Localhost-only operation by default. No internet access is required for core experiments; endpoints for chat/ticketing/monitoring are simulated as local HTTP services.",
+    "repository_layout_assumptions": {
+      "scripts_dir": "scripts/integrations/",
+      "data_dir": "data/",
+      "logs_dir": "logs/",
+      "config_dir": "config/",
+      "notebooks_dir": "notebooks/"
+    }
+  },
+  "run_instructions": [
+    "Clone the repository:\n  git clone https://github.com/bookauthority/defending-brand-trust-ai-misinformation.git\n  cd defending-brand-trust-ai-misinformation",
+    "Set up a Python virtual environment (recommended) and install dependencies:\n  python -m venv .venv\n  source .venv/bin/activate  # on Windows: .venv\\\\Scripts\\\\activate\n  pip install -r requirements.txt",
+    "Ensure required directories exist:\n  mkdir -p data/baseline data/treatment logs config",
+    "Populate configuration files using provided templates (paths are examples; actual filenames should be aligned with the repo):\n  - Copy 'config/templates/integration_rules.example.yaml' to 'config/integration_rules.yaml' and review routing rules.\n  - Copy 'config/templates/teams.example.yaml' to 'config/teams.yaml' defining mock comms, legal, and security teams.\n  - No code changes should be necessary for non-technical users; only configuration review and edits.",
+    "Run Workload 1 (baseline):\n  - Generate synthetic alerts:\n    python scripts/integrations/gen_alerts.py \\\n      --output data/baseline/alerts_stream.jsonl \\\n      --count 100 --duration-minutes 30 --seed 42\n  - Run manual export and triage simulation:\n    python scripts/integrations/baseline_manual_triage.py \\\n      --input data/baseline/alerts_stream.jsonl \\\n      --triage-output data/baseline/triage_sheet.csv\n  - Simulate manual ticket and chat creation:\n    python scripts/integrations/baseline_create_tickets_and_chat.py \\\n      --triage-input data/baseline/triage_sheet.csv \\\n      --tickets-log logs/baseline_tickets.jsonl \\\n      --chat-log logs/baseline_chat.jsonl",
+    "Run Workload 1 (treatment):\n  - Start mock services in separate terminals or via a supervisor script:\n    python scripts/integrations/mock_chat_service.py --port 8101\n    python scripts/integrations/mock_ticketing_service.py --port 8102\n    python scripts/integrations/integration_service.py \\\n      --port 8100 \\\n      --chat-url http://localhost:8101/chat/post_message \\\n      --ticket-url http://localhost:8102/tickets\n  - Generate and emit alerts directly to the integration webhook:\n    python scripts/integrations/gen_alerts.py \\\n      --output data/treatment/alerts_stream.jsonl \\\n      --count 100 --duration-minutes 30 --seed 42 \\\n      --webhook-url http://localhost:8100/webhook/alerts\n  - Confirm that integration logs were written:\n    ls logs/treatment_events.jsonl",
+    "Run Workload 2 (baseline and treatment) using analogous commands with different arguments, for example:\n  - Baseline spike generation:\n    python scripts/integrations/gen_alerts.py \\\n      --output data/baseline/spike_alerts.jsonl \\\n      --count 60 --duration-minutes 5 --seed 123 \\\n      --scenario spike\n  - Baseline spike triage and routing simulation:\n    python scripts/integrations/baseline_spike_triage_and_assign.py \\\n      --input data/baseline/spike_alerts.jsonl \\\n      --triage-output data/baseline/spike_triage.csv \\\n      --assignments-log logs/baseline_spike_team_assignments.jsonl\n  - Treatment spike generation and routing:\n    python scripts/integrations/gen_alerts.py \\\n      --output data/treatment/spike_alerts.jsonl \\\n      --count 60 --duration-minutes 5 --seed 123 \\\n      --scenario spike \\\n      --webhook-url http://localhost:8100/webhook/alerts\n  - Validate treatment spike events in 'logs/treatment_spike_events.jsonl'.",
+    "Run Workload 3 (failure scenarios):\n  - Start mock services with failure injection flags:\n    python scripts/integrations/mock_chat_service.py --port 8101 --simulate-downtime 180\n    python scripts/integrations/mock_ticketing_service.py --port 8102 --error-rate 0.2\n    python scripts/integrations/integration_service.py --port 8100 --chat-url http://localhost:8101/chat/post_message --ticket-url http://localhost:8102/tickets\n  - Generate alerts including malformed payloads:\n    python scripts/integrations/gen_alerts.py \\\n      --output data/treatment/failure_alerts.jsonl \\\n      --count 40 --duration-minutes 10 --seed 777 \\\n      --inject-malformed 0.1 \\\n      --webhook-url http://localhost:8100/webhook/alerts\n  - For baseline comparison, re-run with failure behaviors encoded in baseline scripts and no webhooks.",
+    "Compute metrics using the analysis notebook or script:\n  - Open 'notebooks/ch11_integration_experiment_analysis.ipynb' in Jupyter, or run:\n    python scripts/integrations/compute_metrics.py \\\n      --baseline-logs logs/baseline_tickets.jsonl logs/baseline_chat.jsonl \\\n      --treatment-logs logs/treatment_events.jsonl \\\n      --output reports/ch11_integration_metrics.json\n  - The analysis will parse logs according to the evidence_schema, compute all defined metrics per workload, and write a summary JSON report.",
+    "Review results in business-friendly terms:\n  - Open the generated report (e.g., 'reports/ch11_integration_metrics.json') and compare baseline vs. treatment for key metrics such as latency, coverage, routing accuracy, and unrecovered failures.\n  - Use the chapter\u2019s leadership checklist and discussion prompts to interpret what these results imply for your own organization\u2019s integration priorities, vendor requirements, and technical debt strategies."
+  ],
+  "evidence_schema": {
+    "description": "Canonical schemas for logs and metric outputs produced by the integration experiments, enabling consistent analysis and interpretation.",
+    "entities": {
+      "alert_event": {
+        "fields": {
+          "alert_id": "string, unique identifier for the alert; used as a primary correlation key.",
+          "timestamp_detected": "string, ISO 8601 UTC timestamp when the synthetic monitoring system detected the alert.",
+          "source_channel": "string, channel where the signal originated (e.g., 'twitter', 'tiktok', 'news', 'internal_tipline').",
+          "scenario_tag": "string, optional tag describing the scenario (e.g., 'deepfake_executive_video').",
+          "suspected_attack_type": "string, description or category such as 'deepfake_video', 'synthetic_reviews', 'fabricated_safety_incident'.",
+          "severity_score": "number, e.g., 1\u20135 ordinal scale, higher means higher priority.",
+          "confidence_score": "number, 0.0\u20131.0, confidence in the alert\u2019s correctness.",
+          "impacted_asset": "string, optional, name or identifier of the brand, product, executive, or function affected.",
+          "summary_text": "string, short textual description of the alert.",
+          "url": "string, optional, reference link to the content when applicable.",
+          "raw_payload": "object, optional, full raw JSON payload as received or generated.",
+          "experiment_run_id": "string, identifier for the experiment run instance.",
+          "workload_name": "string, one of the defined workloads (e.g., 'workload-1-single-stream-medium-volume')."
+        }
+      },
+      "chat_event": {
+        "fields": {
+          "chat_event_id": "string, unique identifier for the chat event.",
+          "alert_id": "string, correlation to alert_event.alert_id.",
+          "timestamp_posted": "string, ISO 8601 UTC timestamp when the message was posted to chat.",
+          "channel_name": "string, name of the (mock) chat channel (e.g., 'comms_incidents', 'security_incidents').",
+          "message_text": "string, message body or summary posted.",
+          "owning_team": "string, which team this channel is mapped to (e.g., 'comms', 'legal', 'security').",
+          "experiment_run_id": "string, identifier for the experiment run instance.",
+          "workload_name": "string, workload under which this event occurred.",
+          "delivery_status": "string, 'success' or 'failure', indicates whether posting succeeded.",
+          "error_detail": "string, optional, error message if delivery_status == 'failure'."
+        }
+      },
+      "ticket_event": {
+        "fields": {
+          "ticket_id": "string, unique identifier for the ticket/incident.",
+          "alert_id": "string, correlation to alert_event.alert_id.",
+          "timestamp_created": "string, ISO 8601 UTC timestamp when the initial ticket was created.",
+          "timestamp_updated": "string, optional, last updated timestamp if applicable.",
+          "status": "string, ticket status (e.g., 'open', 'in_progress', 'closed').",
+          "priority": "string, mapped from severity or business rules (e.g., 'P1', 'P2', 'P3').",
+          "owning_team": "string, primary responsible team (e.g., 'comms', 'legal', 'security').",
+          "summary": "string, summary or title of the incident.",
+          "experiment_run_id": "string, identifier for the experiment run instance.",
+          "workload_name": "string, workload under which this ticket was created."
+        }
+      },
+      "error_event": {
+        "fields": {
+          "error_id": "string, unique identifier.",
+          "timestamp": "string, ISO 8601 UTC timestamp when the error was recorded.",
+          "component": "string, where the error occurred (e.g., 'integration_service', 'mock_chat_service', 'baseline_manual_triage').",
+          "alert_id": "string, optional, correlation to alert_event.alert_id if applicable.",
+          "error_type": "string, short category label (e.g., 'validation_error', 'delivery_failure').",
+          "error_message": "string, detailed error description.",
+          "retry_count": "integer, number of retries attempted (if any).",
+          "recovered": "boolean, whether the system ultimately succeeded in processing after the error.",
+          "experiment_run_id": "string, identifier for the experiment run instance.",
+          "workload_name": "string, workload name."
+        }
+      },
+      "metric_summary": {
+        "fields": {
+          "experiment_run_id": "string, identifier for the experiment run instance, grouping all results.",
+          "workload_name": "string, workload for which these metrics were computed.",
+          "pipeline_type": "string, 'baseline' or 'treatment'.",
+          "end_to_end_alert_to_ticket_latency_median_sec": "number, median latency from detection to ticket creation in seconds.",
+          "end_to_end_alert_to_ticket_latency_p95_sec": "number, 95th percentile latency in seconds.",
+          "end_to_end_alert_to_chat_latency_median_sec": "number, median latency from detection to chat posting in seconds.",
+          "end_to_end_alert_to_chat_latency_p95_sec": "number, 95th percentile latency in seconds.",
+          "alert_routing_coverage": "number, fraction of alerts meeting routing criteria that resulted in at least one ticket and/or chat event.",
+          "routing_accuracy": "number, fraction of routed alerts whose owning_team matches the ground-truth mapping.",
+          "operator_touch_points_per_100_alerts": "number, estimated manual steps normalized per 100 alerts.",
+          "unrecovered_delivery_failures": "integer, count of alerts not successfully routed after retries.",
+          "error_detection_rate": "number, fraction of malformed alerts that were detected and logged as errors.",
+          "configuration_lines": "integer, count of non-comment, non-blank lines in configuration files relevant to routing.",
+          "routing_rule_count": "integer, number of distinct routing rules defined.",
+          "notes": "string, optional, free-text annotations or caveats about the run (e.g., anomalies, deviations from standard setup)."
+        }
+      }
+    }
+  }
+}
